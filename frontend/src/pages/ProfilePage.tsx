@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Bell, Settings, UserCircle } from "lucide-react";
-import { topDeals } from "../data/games";
+import { useState } from "react";
+import { gamesData } from "../data/gamesData";
 
 const tabs = ["Price Alerts", "Wishlist", "Settings"] as const;
 
@@ -39,7 +39,7 @@ export default function ProfilePage() {
         <div className="mt-6 rounded-lg border border-border-color bg-bg-surface/70 p-6">
           {activeTab === "Price Alerts" ? (
             <div className="space-y-4">
-              {topDeals.slice(0, 3).map((deal) => (
+              {gamesData.slice(0, 3).map((deal) => (
                 <div
                   key={deal.id}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-color bg-bg-secondary/70 p-4"
@@ -47,8 +47,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm font-semibold text-text-primary">{deal.title}</p>
                     <p className="text-xs text-text-secondary">
-                      Target: €{(deal.currentPrice - 5).toFixed(2)} · Prezzo attuale: €
-                      {deal.currentPrice.toFixed(2)}
+                      Target: €{(deal.prices[0].price - 5).toFixed(2)} · Prezzo attuale: €
+                      {deal.prices[0].price.toFixed(2)}
                     </p>
                   </div>
                   <button className="rounded-md border border-border-color px-3 py-1 text-xs text-text-secondary">
@@ -61,18 +61,18 @@ export default function ProfilePage() {
 
           {activeTab === "Wishlist" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {topDeals.slice(0, 6).map((deal) => (
+              {gamesData.slice(0, 6).map((deal) => (
                 <div
                   key={deal.id}
                   className="rounded-md border border-border-color bg-bg-secondary/70 p-3"
                 >
                   <img
-                    src={deal.image}
+                    src={deal.coverImage}
                     alt={deal.title}
                     className="h-32 w-full rounded-md object-cover"
                   />
                   <p className="mt-2 text-sm font-semibold text-text-primary">{deal.title}</p>
-                  <p className="text-xs text-success">€{deal.currentPrice.toFixed(2)}</p>
+                  <p className="text-xs text-success">€{deal.prices[0].price.toFixed(2)}</p>
                 </div>
               ))}
             </div>
@@ -88,12 +88,8 @@ export default function ProfilePage() {
                 <Bell className="h-4 w-4 text-warning" />
                 Sconto minimo alert: 50%
               </div>
-              <div>
-                Piattaforme preferite: PC, PlayStation 5
-              </div>
-              <div>
-                Store preferiti: Instant Gaming, Eneba
-              </div>
+              <div>Piattaforme preferite: PC, PlayStation 5</div>
+              <div>Store preferiti: Instant Gaming, Eneba</div>
             </div>
           ) : null}
         </div>

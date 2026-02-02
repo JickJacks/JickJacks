@@ -1,10 +1,16 @@
-import { useParams } from "react-router-dom";
 import { Bell, Heart } from "lucide-react";
-import { topDeals } from "../data/games";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import PriceComparisonTable from "../components/PriceComparisonTable";
+import PriceHistoryChart from "../components/PriceHistoryChart";
+import { gamesData } from "../data/gamesData";
+import { useWishlist } from "../context/WishlistContext";
 
 export default function GameDetailPage() {
   const { id } = useParams();
-  const game = topDeals.find((deal) => deal.id === id);
+  const game = gamesData.find((deal) => deal.id === id);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!game) {
     return (
@@ -17,12 +23,25 @@ export default function GameDetailPage() {
     );
   }
 
+  const bestPrice = [...game.prices].sort((a, b) => a.price - b.price)[0];
+  const inWishlist = isInWishlist(game.id);
+
+  const handleWishlistToggle = () => {
+    setIsProcessing(true);
+    if (inWishlist) {
+      removeFromWishlist(game.id);
+    } else {
+      addToWishlist(game.id);
+    }
+    window.setTimeout(() => setIsProcessing(false), 400);
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary">
       <div className="mx-auto max-w-[1100px] px-4 py-10">
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <div className="overflow-hidden rounded-lg border border-border-color bg-bg-surface">
-            <img src={game.image} alt={game.title} className="h-full w-full object-cover" />
+            <img src={game.coverImage} alt={game.title} className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-text-primary">{game.title}</h1>
@@ -50,18 +69,21 @@ export default function GameDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-text-muted">Miglior prezzo</p>
-                  <p className="font-mono text-2xl text-success">€{game.currentPrice.toFixed(2)}</p>
-                  <p className="text-xs text-text-muted">Store: {game.store}</p>
+                  <p className="font-mono text-2xl text-success">€{bestPrice.price.toFixed(2)}</p>
+                  <p className="text-xs text-text-muted">Store: {bestPrice.store}</p>
                 </div>
                 <div className="text-right text-xs text-text-muted">
-                  Era €{game.originalPrice.toFixed(2)}
-                  <br />
-                  Sconto {game.discount}%
+                  Ultimo update {new Date(bestPrice.lastUpdated).toLocaleDateString("it-IT")}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
-                <button className="flex items-center gap-2 rounded-md border border-border-color px-4 py-2 text-sm text-text-secondary">
-                  <Heart className="h-4 w-4" /> Aggiungi a Wishlist
+                <button
+                  className="flex items-center gap-2 rounded-md border border-border-color px-4 py-2 text-sm text-text-secondary disabled:opacity-60"
+                  onClick={handleWishlistToggle}
+                  disabled={isProcessing}
+                >
+                  <Heart className={`h-4 w-4 ${inWishlist ? "fill-error text-error" : ""}`} />
+                  {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
                 </button>
                 <button className="flex items-center gap-2 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white">
                   <Bell className="h-4 w-4" /> Crea Alert Prezzo
@@ -70,6 +92,9 @@ export default function GameDetailPage() {
             </div>
           </div>
         </div>
+
+        <PriceComparisonTable prices={game.prices} />
+        <PriceHistoryChart data={game.priceHistory} />
 
         <div className="mt-10">
           <h2 className="text-lg font-semibold text-text-primary">Screenshots</h2>

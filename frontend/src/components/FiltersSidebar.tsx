@@ -1,9 +1,29 @@
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { gamesData } from "../data/gamesData";
+import { useFilters } from "../context/FilterContext";
 
-const platforms = ["PC", "PlayStation 5", "Xbox Series X|S", "Nintendo Switch"];
-const genres = ["Action", "RPG", "FPS", "Strategy", "Adventure"];
-const years = [2024, 2023, 2022, 2021, 2020];
+const platforms = [
+  "PC",
+  "PlayStation 5",
+  "PlayStation 4",
+  "Xbox Series X|S",
+  "Xbox One",
+  "Nintendo Switch",
+];
+
+const genres = [
+  "Action",
+  "Adventure",
+  "RPG",
+  "Strategy",
+  "Sports",
+  "Racing",
+  "Simulation",
+  "Horror",
+  "Shooter",
+  "Sci-Fi",
+];
 
 type FiltersSidebarProps = {
   isOpen: boolean;
@@ -12,6 +32,26 @@ type FiltersSidebarProps = {
 
 export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps) {
   const [advancedOpen, setAdvancedOpen] = useState(true);
+  const {
+    selectedPlatforms,
+    togglePlatform,
+    selectedGenres,
+    toggleGenre,
+    priceRange,
+    setPriceRange,
+    releaseYears,
+    yearRange,
+    setYearRange,
+    clearFilters,
+  } = useFilters();
+
+  const platformCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    platforms.forEach((platform) => {
+      counts[platform] = gamesData.filter((game) => game.platforms.includes(platform)).length;
+    });
+    return counts;
+  }, []);
 
   return (
     <>
@@ -44,7 +84,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
         <div className="mt-4 rounded-lg border border-border-color bg-bg-surface/90 p-6 shadow-md backdrop-blur-xl lg:mt-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <SlidersHorizontal className="h-4 w-4 text-accent-primary" />
-            Filtri avanzati
+            Filtri
           </div>
 
           <div className="mt-6 space-y-6 text-sm text-text-secondary">
@@ -52,9 +92,17 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
               <p className="text-xs font-semibold uppercase text-text-muted">Piattaforme</p>
               <div className="mt-3 space-y-2">
                 {platforms.map((platform) => (
-                  <label key={platform} className="flex items-center gap-2">
-                    <input type="checkbox" className="h-4 w-4" />
-                    {platform}
+                  <label key={platform} className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedPlatforms.includes(platform)}
+                        onChange={() => togglePlatform(platform)}
+                      />
+                      {platform}
+                    </span>
+                    <span className="text-xs text-text-muted">{platformCounts[platform]}</span>
                   </label>
                 ))}
               </div>
@@ -62,42 +110,95 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
 
             <div>
               <p className="text-xs font-semibold uppercase text-text-muted">Prezzo</p>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <span>€0</span>
-                <input type="range" className="w-full" />
-                <span>€100</span>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span>€{priceRange.min}</span>
+                  <span>€{priceRange.max}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={80}
+                  value={priceRange.min}
+                  onChange={(event) =>
+                    setPriceRange({
+                      min: Math.min(Number(event.target.value), priceRange.max),
+                      max: priceRange.max,
+                    })
+                  }
+                  className="w-full"
+                  aria-label="Prezzo minimo"
+                />
+                <input
+                  type="range"
+                  min={0}
+                  max={80}
+                  value={priceRange.max}
+                  onChange={(event) =>
+                    setPriceRange({
+                      min: priceRange.min,
+                      max: Math.max(Number(event.target.value), priceRange.min),
+                    })
+                  }
+                  className="w-full"
+                  aria-label="Prezzo massimo"
+                />
               </div>
             </div>
 
             <div>
               <p className="text-xs font-semibold uppercase text-text-muted">Genere</p>
-              <div className="mt-3 flex items-center justify-between rounded-md border border-border-color px-3 py-2">
-                <span>Seleziona genere</span>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {genres.map((genre) => (
-                  <span
+                  <label
                     key={genre}
-                    className="rounded-full border border-border-color px-3 py-1 text-xs"
+                    className={`rounded-full border px-3 py-1 text-xs transition ${
+                      selectedGenres.includes(genre)
+                        ? "border-accent-primary bg-accent-primary/20 text-accent-primary"
+                        : "border-border-color"
+                    }`}
                   >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={selectedGenres.includes(genre)}
+                      onChange={() => toggleGenre(genre)}
+                    />
                     {genre}
-                  </span>
+                  </label>
                 ))}
               </div>
             </div>
 
             <div>
               <p className="text-xs font-semibold uppercase text-text-muted">Anno di uscita</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {years.map((year) => (
-                  <button
-                    key={year}
-                    className="rounded-full border border-border-color px-3 py-1 text-xs"
-                  >
-                    {year}
-                  </button>
-                ))}
+              <div className="mt-3 flex gap-2">
+                <select
+                  className="w-full rounded-md border border-border-color bg-bg-secondary/70 px-3 py-2 text-xs"
+                  value={yearRange[0]}
+                  onChange={(event) =>
+                    setYearRange([Number(event.target.value), yearRange[1]])
+                  }
+                >
+                  {releaseYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="w-full rounded-md border border-border-color bg-bg-secondary/70 px-3 py-2 text-xs"
+                  value={yearRange[1]}
+                  onChange={(event) =>
+                    setYearRange([yearRange[0], Number(event.target.value)])
+                  }
+                >
+                  {releaseYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -128,8 +229,11 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
             </div>
 
             <div className="flex gap-2">
-              <button className="flex-1 rounded-md border border-border-color px-3 py-2 text-xs font-semibold text-text-secondary">
-                Reset Filtri
+              <button
+                className="flex-1 rounded-md border border-border-color px-3 py-2 text-xs font-semibold text-text-secondary"
+                onClick={clearFilters}
+              >
+                Clear all
               </button>
               <button className="flex-1 rounded-md bg-accent-primary px-3 py-2 text-xs font-semibold text-white">
                 Applica
