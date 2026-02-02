@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Layout from "./components/Layout";
 import { FilterProvider } from "./context/FilterContext";
 import { ToastProvider } from "./context/ToastContext";
 import { WishlistProvider } from "./context/WishlistContext";
@@ -15,10 +16,12 @@ export default function App() {
         <WishlistProvider>
           <FilterProvider>
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/game/:id" element={<GameDetailPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/game/:id" element={<GameDetailPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
+              </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </FilterProvider>

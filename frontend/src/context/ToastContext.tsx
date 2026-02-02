@@ -20,7 +20,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setMessages((prev) => [...prev, { id, text }]);
     window.setTimeout(() => {
       setMessages((prev) => prev.filter((message) => message.id !== id));
-    }, 2500);
+    }, 3000);
   }, []);
 
   return (
