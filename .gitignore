@@ -5,3 +5,4 @@ backend/node_modules/
 frontend/dist/
 backend/dist/
 .env
+frontend/tsconfig.tsbuildinfo
