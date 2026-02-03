@@ -16,10 +16,15 @@ import { useWishlist } from "../context/WishlistContext";
 import usePriceAlerts from "../hooks/usePriceAlerts";
 import { useToast } from "../components/Toast";
 import { type AppSettings, useSettings } from "../context/SettingsContext";
+import { useTranslation } from "../hooks/useTranslation";
 
-const tabs = ["Price Alerts", "Wishlist", "Settings"] as const;
+const tabs = [
+  { key: "price_alerts", labelKey: "tab_price_alerts" },
+  { key: "wishlist", labelKey: "tab_wishlist" },
+  { key: "settings", labelKey: "tab_settings" },
+] as const;
 
-type Tab = (typeof tabs)[number];
+type Tab = (typeof tabs)[number]["key"];
 
 type AlertFormState = {
   gameId: string;
@@ -48,11 +53,12 @@ const defaultProfileDetails: ProfileDetails = {
 };
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<Tab>("Price Alerts");
+  const [activeTab, setActiveTab] = useState<Tab>("price_alerts");
   const { wishlistIds, getWishlistGames, removeFromWishlist } = useWishlist();
   const { alerts, addAlert, updateAlert, removeAlert } = usePriceAlerts();
   const { showToast } = useToast();
   const { settings, updateSetting } = useSettings();
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -123,8 +129,8 @@ export default function ProfilePage() {
     setForm(initialForm);
   };
 
-  const saveSettings = (message = "Impostazioni salvate ✓") => {
-    showToast(message);
+  const saveSettings = (message?: string) => {
+    showToast(message ?? t("settings_saved_toast"));
   };
 
   const handleAvatarChange = (file?: File) => {
@@ -137,25 +143,9 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const notificationFrequencyOptions: Array<{
-    value: AppSettings["notificationFrequency"];
-    label: string;
-  }> = [
-    { value: "every_time", label: "Ogni volta" },
-    { value: "once_day", label: "Una volta al giorno" },
-    { value: "once_week", label: "Una volta a settimana" },
-  ];
-
-  const languageOptions: Array<{ value: AppSettings["language"]; label: string }> = [
-    { value: "it", label: "Italiano" },
-    { value: "en", label: "English" },
-    { value: "es", label: "Español" },
-    { value: "fr", label: "Français" },
-  ];
-
   const handleSave = () => {
     if (!form.gameId || !form.targetPrice) {
-      showToast("Seleziona un gioco e inserisci un prezzo target.");
+      showToast(t("modal_select_game_and_price"));
       return;
     }
     if (editingId) {
@@ -164,14 +154,14 @@ export default function ProfilePage() {
         targetPrice: Number(form.targetPrice),
         stores: form.stores,
       });
-      showToast("Alert aggiornato ✓");
+      showToast(t("modal_alert_updated_toast"));
     } else {
       addAlert({
         gameId: form.gameId,
         targetPrice: Number(form.targetPrice),
         stores: form.stores,
       });
-      showToast("Alert creato ✓");
+      showToast(t("modal_alert_created_toast"));
     }
     closeModal();
   };
@@ -220,10 +210,10 @@ export default function ProfilePage() {
         </div>
         <div className="mt-4 flex flex-wrap gap-6 text-sm text-text-secondary">
           <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-error" /> {wishlistIds.length} giochi in wishlist
+            <Heart className="h-4 w-4 text-error" /> {wishlistIds.length} {t("profile_games_in_wishlist")}
           </div>
           <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-warning" /> {alerts.length} alert attivi
+            <Bell className="h-4 w-4 text-warning" /> {alerts.length} {t("profile_active_alerts")}
           </div>
         </div>
       </div>
@@ -232,41 +222,39 @@ export default function ProfilePage() {
         <div className="flex flex-wrap gap-3">
           {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                activeTab === tab
+                activeTab === tab.key
                   ? "bg-accent-primary text-white"
                   : "border border-border-color text-text-secondary"
               }`}
             >
-              {tab}
+              {t(tab.labelKey)}
             </button>
           ))}
         </div>
-        {activeTab === "Price Alerts" ? (
+        {activeTab === "price_alerts" ? (
           <button
             className="inline-flex items-center gap-2 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
             onClick={() => openModal()}
           >
-            <Plus className="h-4 w-4" /> New Alert
+            <Plus className="h-4 w-4" /> {t("alerts_new_alert")}
           </button>
         ) : null}
       </div>
 
       <div className="mt-6 rounded-lg border border-border-color bg-bg-surface/70 p-6">
-        {activeTab === "Price Alerts" ? (
+        {activeTab === "price_alerts" ? (
           alertsWithData.length === 0 ? (
             <div className="rounded-lg border border-border-color bg-bg-secondary/70 p-8 text-center text-text-secondary">
-              <p className="text-base font-semibold text-text-primary">Nessun alert attivo</p>
-              <p className="mt-2">
-                Aggiungi un alert per essere notificato sui cali di prezzo.
-              </p>
+              <p className="text-base font-semibold text-text-primary">{t("alerts_empty_title")}</p>
+              <p className="mt-2">{t("alerts_empty_subtitle")}</p>
               <button
                 className="mt-4 inline-flex items-center gap-2 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
                 onClick={() => openModal()}
               >
-                <Plus className="h-4 w-4" /> Aggiungi il primo alert
+                <Plus className="h-4 w-4" /> {t("alerts_add_first")}
               </button>
             </div>
           ) : (
@@ -287,7 +275,7 @@ export default function ProfilePage() {
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-text-primary">{game?.title}</p>
                       <p className="mt-1 text-xs text-text-secondary">
-                        Target: €{alert.targetPrice.toFixed(2)} · Attuale: €
+                        {t("alerts_target")} €{alert.targetPrice.toFixed(2)} · {t("alerts_current")} €
                         {currentPrice.toFixed(2)}
                       </p>
                     </div>
@@ -296,26 +284,26 @@ export default function ProfilePage() {
                         className="rounded-md border border-border-color px-3 py-1 text-xs text-text-secondary"
                         onClick={() => openModal(alert.id)}
                       >
-                        Modifica
+                        {t("alerts_edit")}
                       </button>
                       {confirmDeleteId === alert.id ? (
                         <div className="flex items-center gap-2 text-xs">
-                          <span>Sei sicuro?</span>
+                          <span>{t("alerts_are_you_sure")}</span>
                           <button
                             className="text-error"
                             onClick={() => {
                               removeAlert(alert.id);
                               setConfirmDeleteId(null);
-                              showToast("Alert eliminato");
+                              showToast(t("alerts_deleted_toast"));
                             }}
                           >
-                            Sì
+                            {t("alerts_yes")}
                           </button>
                           <button
                             className="text-text-secondary"
                             onClick={() => setConfirmDeleteId(null)}
                           >
-                            No
+                            {t("alerts_no")}
                           </button>
                         </div>
                       ) : (
@@ -330,9 +318,9 @@ export default function ProfilePage() {
                   </div>
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-xs text-text-secondary">
-                      <span>{Math.round(progress)}% del target</span>
+                      <span>{Math.round(progress)}{t("alerts_percent_of_target")}</span>
                       {withinTarget ? (
-                        <span className="text-success">🎉 Prezzo raggiunto!</span>
+                        <span className="text-success">{t("alerts_price_reached")}</span>
                       ) : null}
                     </div>
                     <div className="mt-2 h-2 w-full rounded-full bg-bg-primary">
@@ -354,46 +342,44 @@ export default function ProfilePage() {
           )
         ) : null}
 
-        {activeTab === "Wishlist" ? (
+        {activeTab === "wishlist" ? (
           <div>
             <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-text-secondary">
-              <span className="font-semibold text-text-primary">Sort by:</span>
+              <span className="font-semibold text-text-primary">{t("wishlist_sort_by")}</span>
               <button
                 onClick={() => setWishlistSort("name")}
                 className={wishlistSort === "name" ? "text-accent-primary" : ""}
               >
-                Nome
+                {t("wishlist_sort_name")}
               </button>
               <button
                 onClick={() => setWishlistSort("price-asc")}
                 className={wishlistSort === "price-asc" ? "text-accent-primary" : ""}
               >
-                Prezzo ↑
+                {t("wishlist_sort_price_asc")}
               </button>
               <button
                 onClick={() => setWishlistSort("price-desc")}
                 className={wishlistSort === "price-desc" ? "text-accent-primary" : ""}
               >
-                Prezzo ↓
+                {t("wishlist_sort_price_desc")}
               </button>
               <button
                 onClick={() => setWishlistSort("recent")}
                 className={wishlistSort === "recent" ? "text-accent-primary" : ""}
               >
-                Aggiunto recentemente
+                {t("wishlist_sort_recent")}
               </button>
             </div>
             {wishlistGames.length === 0 ? (
               <div className="rounded-lg border border-border-color bg-bg-secondary/70 p-8 text-center text-text-secondary">
-                <p className="text-base font-semibold text-text-primary">La tua wishlist è vuota</p>
-                <p className="mt-2">
-                  Aggiungi giochi dalla homepage usando il cuore ♥
-                </p>
+                <p className="text-base font-semibold text-text-primary">{t("wishlist_empty_title")}</p>
+                <p className="mt-2">{t("wishlist_empty_subtitle")}</p>
                 <Link
                   to="/"
                   className="mt-4 inline-flex rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
                 >
-                  Sfoglia giochi
+                  {t("wishlist_browse_games")}
                 </Link>
               </div>
             ) : (
@@ -410,7 +396,7 @@ export default function ProfilePage() {
                         removeFromWishlist(game.id);
                       }}
                       className="absolute right-3 top-3 rounded-full border border-border-color bg-bg-primary/80 p-1 text-text-secondary opacity-0 transition group-hover:opacity-100"
-                      aria-label="Remove from wishlist"
+                      aria-label={t("wishlist_remove_label")}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -438,10 +424,10 @@ export default function ProfilePage() {
           </div>
         ) : null}
 
-        {activeTab === "Settings" ? (
+        {activeTab === "settings" ? (
           <div className="space-y-8 text-sm text-text-secondary">
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Profilo</h3>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_profile")}</h3>
               <div className="mt-4 flex flex-wrap items-center gap-6">
                 <div className="flex flex-col items-center gap-2">
                   <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border-color">
@@ -456,7 +442,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <label className="flex cursor-pointer items-center gap-2 text-xs text-accent-primary">
-                    <Camera className="h-3 w-3" /> Cambia foto
+                    <Camera className="h-3 w-3" /> {t("settings_change_photo")}
                     <input
                       type="file"
                       accept="image/*"
@@ -467,7 +453,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <label className="text-xs font-semibold uppercase text-text-muted">Nome utente</label>
+                    <label className="text-xs font-semibold uppercase text-text-muted">{t("settings_username")}</label>
                     <div className="mt-2 flex gap-2">
                       <input
                         value={profileDetails.username}
@@ -480,12 +466,12 @@ export default function ProfilePage() {
                         className="inline-flex items-center gap-2 rounded-md bg-accent-primary px-3 py-2 text-xs font-semibold text-white"
                         onClick={() => saveSettings()}
                       >
-                        <Save className="h-3 w-3" /> Salva
+                        <Save className="h-3 w-3" /> {t("settings_save")}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase text-text-muted">Email</label>
+                    <label className="text-xs font-semibold uppercase text-text-muted">{t("settings_email")}</label>
                     <input
                       value={profileDetails.email}
                       onChange={(event) =>
@@ -499,14 +485,12 @@ export default function ProfilePage() {
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Notifiche</h3>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_notifications")}</h3>
               <div className="mt-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-text-primary">Notifiche email</p>
-                    <p className="text-xs text-text-secondary">
-                      Ricevi notifiche quando un prezzo raggiunge il tuo target
-                    </p>
+                    <p className="font-semibold text-text-primary">{t("settings_email_notifications")}</p>
+                    <p className="text-xs text-text-secondary">{t("settings_email_notifications_desc")}</p>
                   </div>
                   <button
                     className={`h-6 w-12 rounded-full p-1 transition ${
@@ -527,8 +511,8 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-text-primary">Notifica instantanea</p>
-                    <p className="text-xs text-text-secondary">Notifiche dirette nel browser</p>
+                    <p className="font-semibold text-text-primary">{t("settings_push_notifications")}</p>
+                    <p className="text-xs text-text-secondary">{t("settings_push_notifications_desc")}</p>
                   </div>
                   <button
                     className={`h-6 w-12 rounded-full p-1 transition ${
@@ -549,7 +533,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase text-text-muted">
-                    Frequenza notifiche
+                    {t("settings_notification_frequency")}
                   </label>
                   <select
                     className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
@@ -562,22 +546,20 @@ export default function ProfilePage() {
                       saveSettings();
                     }}
                   >
-                    {notificationFrequencyOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    <option value="every_time">{t("settings_freq_every_time")}</option>
+                    <option value="once_day">{t("settings_freq_once_day")}</option>
+                    <option value="once_week">{t("settings_freq_once_week")}</option>
                   </select>
                 </div>
               </div>
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Alert preferences</h3>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_alert_preferences")}</h3>
               <div className="mt-4 space-y-4">
                 <div>
                   <label className="text-xs font-semibold uppercase text-text-muted">
-                    Sconto minimo per alert
+                    {t("settings_min_discount")}
                   </label>
                   <div className="mt-2 flex items-center gap-3">
                     <input
@@ -594,13 +576,11 @@ export default function ProfilePage() {
                       {settings.minimumDiscount}%
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-text-secondary">
-                    Ricevi alert solo se lo sconto supera questa soglia
-                  </p>
+                  <p className="mt-1 text-xs text-text-secondary">{t("settings_min_discount_desc")}</p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase text-text-muted">
-                    Prezzo minimo per alert
+                    {t("settings_min_price")}
                   </label>
                   <div className="mt-2 flex items-center gap-2 rounded-md border border-border-color bg-bg-primary px-3 py-2">
                     <span className="text-text-secondary">€</span>
@@ -614,24 +594,20 @@ export default function ProfilePage() {
                       className="w-full bg-transparent text-sm text-text-primary focus:outline-none"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-text-secondary">
-                    Non ricevere alert per giochi sotto questo prezzo
-                  </p>
+                  <p className="mt-1 text-xs text-text-secondary">{t("settings_min_price_desc")}</p>
                 </div>
                 <button
                   className="inline-flex items-center gap-2 rounded-md bg-accent-primary px-3 py-2 text-xs font-semibold text-white"
                   onClick={() => saveSettings()}
                 >
-                  <Save className="h-3 w-3" /> Salva preferenze
+                  <Save className="h-3 w-3" /> {t("settings_save_preferences")}
                 </button>
               </div>
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Piattaforme preferite</h3>
-              <p className="mt-1 text-xs text-text-secondary">
-                Filtra automaticamente i giochi per queste piattaforme
-              </p>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_preferred_platforms")}</h3>
+              <p className="mt-1 text-xs text-text-secondary">{t("settings_preferred_platforms_desc")}</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {[
                   "PC",
@@ -663,10 +639,8 @@ export default function ProfilePage() {
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Store preferiti</h3>
-              <p className="mt-1 text-xs text-text-secondary">
-                Mostra preferenzialmente questi store nei confronti prezzi
-              </p>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_preferred_stores")}</h3>
+              <p className="mt-1 text-xs text-text-secondary">{t("settings_preferred_stores_desc")}</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {[
                   "Instant Gaming",
@@ -699,7 +673,7 @@ export default function ProfilePage() {
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Apparenza</h3>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_appearance")}</h3>
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
                 <label className="flex items-center gap-2">
                   <input
@@ -711,7 +685,7 @@ export default function ProfilePage() {
                       saveSettings();
                     }}
                   />
-                  🌙 Scuro
+                  {t("settings_dark")}
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -723,11 +697,11 @@ export default function ProfilePage() {
                       saveSettings();
                     }}
                   />
-                  ☀️ Chiaro
+                  {t("settings_light")}
                 </label>
               </div>
               <div className="mt-4">
-                <label className="text-xs font-semibold uppercase text-text-muted">Lingua</label>
+                <label className="text-xs font-semibold uppercase text-text-muted">{t("settings_language")}</label>
                 <select
                   className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
                   value={settings.language}
@@ -736,41 +710,38 @@ export default function ProfilePage() {
                     saveSettings();
                   }}
                 >
-                  {languageOptions.map((language) => (
-                    <option key={language.value} value={language.value}>
-                      {language.label}
-                    </option>
-                  ))}
+                  <option value="it">Italiano</option>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
                 </select>
               </div>
             </section>
 
             <section className="rounded-lg border border-border-color bg-bg-secondary/70 p-4">
-              <h3 className="text-sm font-semibold text-text-primary">Account & sicurezza</h3>
+              <h3 className="text-sm font-semibold text-text-primary">{t("settings_account_security")}</h3>
               <div className="mt-4 space-y-4">
                 <button
                   className="inline-flex items-center gap-2 rounded-md border border-border-color px-3 py-2 text-xs text-text-secondary"
                   onClick={() => setIsPasswordModalOpen(true)}
                 >
-                  Cambia password
+                  {t("settings_change_password")}
                 </button>
                 <div className="rounded-md border border-border-color bg-bg-primary/60 p-3 text-xs">
-                  <p className="font-semibold text-text-primary">Sessioni attive</p>
+                  <p className="font-semibold text-text-primary">{t("settings_active_sessions")}</p>
                   <p className="mt-2 text-text-secondary">Chrome · Milano · Attiva ora</p>
                   <button className="mt-3 rounded-md border border-border-color px-3 py-2 text-xs text-text-secondary">
-                    Disconnetti tutte le altre sessioni
+                    {t("settings_disconnect_sessions")}
                   </button>
                 </div>
                 <div className="rounded-md border border-error/50 bg-error/10 p-3 text-xs">
-                  <p className="font-semibold text-error">Zona pericolo</p>
-                  <p className="mt-1 text-text-secondary">
-                    Questa azione non può essere annullata
-                  </p>
+                  <p className="font-semibold text-error">{t("settings_danger_zone")}</p>
+                  <p className="mt-1 text-text-secondary">{t("settings_danger_zone_desc")}</p>
                   <button
                     className="mt-3 inline-flex items-center gap-2 rounded-md bg-error px-3 py-2 text-xs text-white"
                     onClick={() => setIsDeleteModalOpen(true)}
                   >
-                    <ShieldAlert className="h-3 w-3" /> Elimina account
+                    <ShieldAlert className="h-3 w-3" /> {t("settings_delete_account")}
                   </button>
                 </div>
               </div>
@@ -784,7 +755,7 @@ export default function ProfilePage() {
           <div className="w-full max-w-lg rounded-lg border border-border-color bg-bg-secondary p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-text-primary">
-                {editingId ? "Modifica alert" : "Crea nuovo alert"}
+                {editingId ? t("modal_edit_alert") : t("modal_create_alert")}
               </h3>
               <button
                 onClick={closeModal}
@@ -795,12 +766,12 @@ export default function ProfilePage() {
             </div>
             <div className="mt-4 space-y-4">
               <div>
-                <label className="text-xs font-semibold uppercase text-text-muted">Cerca gioco</label>
+                <label className="text-xs font-semibold uppercase text-text-muted">{t("modal_search_game")}</label>
                 <input
                   value={gameSearch}
                   onChange={(event) => setGameSearch(event.target.value)}
                   className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
-                  placeholder="Cerca per titolo..."
+                  placeholder={t("modal_search_by_title")}
                 />
                 <div className="mt-3 max-h-40 space-y-2 overflow-y-auto">
                   {filteredGames.map((game) => (
@@ -824,7 +795,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase text-text-muted">Target price</label>
+                <label className="text-xs font-semibold uppercase text-text-muted">{t("modal_target_price")}</label>
                 <div className="mt-2 flex items-center gap-2 rounded-md border border-border-color bg-bg-primary px-3 py-2">
                   <span className="text-text-secondary">€</span>
                   <input
@@ -837,7 +808,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase text-text-muted">Stores</label>
+                <label className="text-xs font-semibold uppercase text-text-muted">{t("modal_stores")}</label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {storeOptions.map((store) => (
                     <label
@@ -872,13 +843,13 @@ export default function ProfilePage() {
                 className="rounded-md border border-border-color px-4 py-2 text-sm text-text-secondary"
                 onClick={closeModal}
               >
-                Cancel
+                {t("modal_cancel")}
               </button>
               <button
                 className="rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
                 onClick={handleSave}
               >
-                Save Alert
+                {t("modal_save_alert")}
               </button>
             </div>
           </div>
@@ -889,7 +860,7 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 animate-fade-in">
           <div className="w-full max-w-md rounded-lg border border-border-color bg-bg-secondary p-6 shadow-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-text-primary">Cambia password</h3>
+              <h3 className="text-lg font-semibold text-text-primary">{t("settings_change_password")}</h3>
               <button
                 onClick={() => setIsPasswordModalOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-md border border-border-color"
@@ -900,17 +871,17 @@ export default function ProfilePage() {
             <div className="mt-4 space-y-3 text-sm">
               <input
                 type="password"
-                placeholder="Password attuale"
+                placeholder={t("password_current")}
                 className="w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-text-primary"
               />
               <input
                 type="password"
-                placeholder="Nuova password"
+                placeholder={t("password_new")}
                 className="w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-text-primary"
               />
               <input
                 type="password"
-                placeholder="Conferma nuova password"
+                placeholder={t("password_confirm")}
                 className="w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-text-primary"
               />
             </div>
@@ -919,16 +890,16 @@ export default function ProfilePage() {
                 className="rounded-md border border-border-color px-4 py-2 text-sm text-text-secondary"
                 onClick={() => setIsPasswordModalOpen(false)}
               >
-                Cancella
+                {t("password_cancel")}
               </button>
               <button
                 className="rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
                 onClick={() => {
-                  showToast("Password aggiornata ✓");
+                  showToast(t("password_updated_toast"));
                   setIsPasswordModalOpen(false);
                 }}
               >
-                Salva
+                {t("settings_save")}
               </button>
             </div>
           </div>
@@ -939,7 +910,7 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 animate-fade-in">
           <div className="w-full max-w-md rounded-lg border border-border-color bg-bg-secondary p-6 shadow-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-text-primary">Elimina account</h3>
+              <h3 className="text-lg font-semibold text-text-primary">{t("settings_delete_account")}</h3>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-md border border-border-color"
@@ -948,23 +919,23 @@ export default function ProfilePage() {
               </button>
             </div>
             <p className="mt-4 text-sm text-text-secondary">
-              Questa azione non può essere annullata. Sei sicuro di voler eliminare l'account?
+              {t("delete_sure")}
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 className="rounded-md border border-border-color px-4 py-2 text-sm text-text-secondary"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                Annulla
+                {t("delete_annulla")}
               </button>
               <button
                 className="rounded-md bg-error px-4 py-2 text-sm font-semibold text-white"
                 onClick={() => {
-                  showToast("Account eliminato");
+                  showToast(t("delete_account_toast"));
                   setIsDeleteModalOpen(false);
                 }}
               >
-                Elimina account
+                {t("settings_delete_account")}
               </button>
             </div>
           </div>

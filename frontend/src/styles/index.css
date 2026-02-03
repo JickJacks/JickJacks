@@ -2,18 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ─── DARK THEME (default) ─── */
+.dark {
+  --color-bg-primary: #0a0a14;
+  --color-bg-secondary: #13131f;
+  --color-bg-surface: #1a1a2e;
+  --color-bg-surface-hover: #232338;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-border: #2d2d44;
+  --color-border-hover: #3d3d54;
+  --color-accent-primary: #6366f1;
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-tertiary: #06b6d4;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-hot-deal: #ff3366;
+  --color-input-bg: #0f0f1a;
+  --color-modal-bg: #1a1a2e;
+  --color-card-overlay: rgba(0, 0, 0, 0.6);
+  --color-skeleton-base: rgba(45, 45, 68, 0.3);
+  --color-skeleton-shine: rgba(61, 61, 84, 0.6);
   color-scheme: dark;
 }
 
-body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #0a0a14;
+/* ─── LIGHT THEME ─── */
+.light {
+  --color-bg-primary: #f0f4f8;
+  --color-bg-secondary: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-hover: #f1f5f9;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+  --color-border-hover: #94a3b8;
+  --color-accent-primary: #6366f1;
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-tertiary: #0891b2;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-hot-deal: #e11d48;
+  --color-input-bg: #f8fafc;
+  --color-modal-bg: #ffffff;
+  --color-card-overlay: rgba(255, 255, 255, 0.6);
+  --color-skeleton-base: rgba(203, 213, 225, 0.4);
+  --color-skeleton-shine: rgba(148, 163, 184, 0.6);
+  color-scheme: light;
 }
 
+/* ─── BASE STYLES ─── */
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── UTILITY CLASSES ─── */
 input[type="checkbox"],
 input[type="range"] {
-  accent-color: #6366f1;
+  accent-color: var(--color-accent-primary);
 }
 
 .gradient-text {
@@ -21,7 +73,9 @@ input[type="range"] {
 }
 
 .glass-card {
-  @apply bg-bg-surface/80 backdrop-blur-xl border border-border-color;
+  background-color: color-mix(in srgb, var(--color-bg-surface) 80%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
 }
 
 .scroll-shadow {
@@ -36,7 +90,44 @@ input[type="range"] {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(45, 45, 68, 0.3) 25%, rgba(61, 61, 84, 0.6) 50%, rgba(45, 45, 68, 0.3) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-base) 25%,
+    var(--color-skeleton-shine) 50%,
+    var(--color-skeleton-base) 75%
+  );
   background-size: 1000px 100%;
   @apply animate-shimmer;
+}
+
+/* ─── SELECT & INPUT DARK MODE FIX ─── */
+select, input, textarea {
+  background-color: var(--color-input-bg);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+select option {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* ─── THEME TRANSITION ─── */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }

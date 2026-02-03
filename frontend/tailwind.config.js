@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -8,22 +9,22 @@ export default {
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
-        "bg-primary": "#0a0a14",
-        "bg-secondary": "#13131f",
-        "bg-surface": "#1a1a2e",
-        "bg-surface-hover": "#232338",
-        "accent-primary": "#6366f1",
-        "accent-secondary": "#8b5cf6",
-        "accent-tertiary": "#06b6d4",
-        success: "#10b981",
-        warning: "#f59e0b",
-        error: "#ef4444",
-        "hot-deal": "#ff3366",
-        "text-primary": "#f1f5f9",
-        "text-secondary": "#94a3b8",
-        "text-muted": "#64748b",
-        "border-color": "#2d2d44",
-        "border-hover": "#3d3d54",
+        "bg-primary": "var(--color-bg-primary)",
+        "bg-secondary": "var(--color-bg-secondary)",
+        "bg-surface": "var(--color-bg-surface)",
+        "bg-surface-hover": "var(--color-bg-surface-hover)",
+        "accent-primary": "var(--color-accent-primary)",
+        "accent-secondary": "var(--color-accent-secondary)",
+        "accent-tertiary": "var(--color-accent-tertiary)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        error: "var(--color-error)",
+        "hot-deal": "var(--color-hot-deal)",
+        "text-primary": "var(--color-text-primary)",
+        "text-secondary": "var(--color-text-secondary)",
+        "text-muted": "var(--color-text-muted)",
+        "border-color": "var(--color-border)",
+        "border-hover": "var(--color-border-hover)",
       },
       boxShadow: {
         sm: "0 2px 8px rgba(0, 0, 0, 0.4)",
@@ -34,7 +35,8 @@ export default {
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        "gradient-hero": "radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+        "gradient-hero":
+          "radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
         "gradient-card": "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%)",
       },
       borderRadius: {
