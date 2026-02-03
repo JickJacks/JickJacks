@@ -43,11 +43,14 @@ const buildUrl = (path: string, params?: Record<string, string | number | undefi
   return url.toString();
 };
 
-const request = async <T>(url: string, signal?: AbortSignal): Promise<T> => {
-  const response = await fetch(url, signal ? { signal } : undefined);
+const request = async <T>(url: string, init: RequestInit = {}): Promise<T> => {
+  const response = await fetch(url, init);
   if (!response.ok) {
     const message = `Request failed with status ${response.status}`;
     throw new Error(message);
+  }
+  if (response.status === 204) {
+    return undefined as T;
   }
   return response.json() as Promise<T>;
 };
@@ -55,10 +58,45 @@ const request = async <T>(url: string, signal?: AbortSignal): Promise<T> => {
 export const fetchGames = (
   params: Record<string, string | number | undefined>,
   signal?: AbortSignal
-) => request<GamesResponse<ApiGame>>(buildUrl("/api/games", params), signal);
+) => request<GamesResponse<ApiGame>>(buildUrl("/api/games", params), signal ? { signal } : {});
 
 export const fetchGame = (idOrSlug: string, signal?: AbortSignal) =>
-  request<ApiGame>(buildUrl(`/api/games/${idOrSlug}`), signal);
+  request<ApiGame>(buildUrl(`/api/games/${idOrSlug}`), signal ? { signal } : {});
 
 export const fetchFilters = (signal?: AbortSignal) =>
-  request<FiltersResponse>(buildUrl("/api/filters"), signal);
+  request<FiltersResponse>(buildUrl("/api/filters"), signal ? { signal } : {});
+
+export type AuthUser = {
+  id: number;
+  email: string;
+};
+
+type AuthResponse = {
+  user: AuthUser;
+  token: string;
+};
+
+export const registerUser = (email: string, password: string) =>
+  request<AuthResponse>(buildUrl("/api/auth/register"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+export const loginUser = (email: string, password: string) =>
+  request<AuthResponse>(buildUrl("/api/auth/login"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+export const fetchCurrentUser = (token: string) =>
+  request<{ user: AuthUser }>(buildUrl("/api/auth/me"), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const logoutUser = (token: string) =>
+  request<void>(buildUrl("/api/auth/logout"), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });

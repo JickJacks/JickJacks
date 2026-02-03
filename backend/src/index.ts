@@ -159,6 +159,10 @@ app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => {
   return res.json({ user: req.user });
 });
 
+app.post("/api/auth/logout", requireAuth, (_req, res) => {
+  return res.status(204).send();
+});
+
 app.get("/api/games", async (req, res) => {
   try {
     const parsed = querySchema.parse(req.query);
