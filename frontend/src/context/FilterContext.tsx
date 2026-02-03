@@ -46,7 +46,8 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isActive = true;
-    fetchFilters()
+    const controller = new AbortController();
+    fetchFilters(controller.signal)
       .then((data) => {
         if (!isActive) return;
         if (data.platforms?.length) setAvailablePlatforms(data.platforms);
@@ -56,11 +57,14 @@ export function FilterProvider({ children }: { children: ReactNode }) {
           setYearRange([data.years[0], data.years[data.years.length - 1]]);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isActive) return;
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.warn("Failed to load filters from API.", error);
       });
     return () => {
       isActive = false;
+      controller.abort();
     };
   }, []);
 

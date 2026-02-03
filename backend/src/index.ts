@@ -29,10 +29,13 @@ const querySchema = z.object({
   limit: z.string().optional(),
 });
 
-const parseNumber = (value: string | undefined) => {
-  if (!value) return undefined;
+const parseNumberParam = (value: string | undefined) => {
+  if (value === undefined) return { value: undefined, invalid: false };
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  if (!Number.isFinite(parsed)) {
+    return { value: undefined, invalid: true };
+  }
+  return { value: parsed, invalid: false };
 };
 
 const toArray = (value?: string) =>
@@ -62,14 +65,39 @@ app.get("/api/games", async (req, res) => {
     const q = parsed.q ? sanitizeQuery(parsed.q) : undefined;
     const platforms = toArray(parsed.platform);
     const genres = toArray(parsed.genres);
-    const minPrice = parseNumber(parsed.minPrice);
-    const maxPrice = parseNumber(parsed.maxPrice);
-    const yearFrom = parseNumber(parsed.yearFrom);
-    const yearTo = parseNumber(parsed.yearTo);
+    const minPriceParam = parseNumberParam(parsed.minPrice);
+    const maxPriceParam = parseNumberParam(parsed.maxPrice);
+    const yearFromParam = parseNumberParam(parsed.yearFrom);
+    const yearToParam = parseNumberParam(parsed.yearTo);
     const sort = parsed.sort ?? "";
 
-    const page = Math.max(1, Math.min(parseNumber(parsed.page) ?? 1, 1000));
-    const limit = Math.max(1, Math.min(parseNumber(parsed.limit) ?? 20, 50));
+    const pageParam = parseNumberParam(parsed.page);
+    const limitParam = parseNumberParam(parsed.limit);
+
+    if (
+      minPriceParam.invalid ||
+      maxPriceParam.invalid ||
+      yearFromParam.invalid ||
+      yearToParam.invalid ||
+      pageParam.invalid ||
+      limitParam.invalid
+    ) {
+      return res.status(400).json({ error: { message: "Invalid query parameters." } });
+    }
+
+    const minPrice = minPriceParam.value;
+    const maxPrice = maxPriceParam.value;
+    const yearFrom = yearFromParam.value;
+    const yearTo = yearToParam.value;
+    const page = Math.max(1, Math.min(pageParam.value ?? 1, 1000));
+    const limit = Math.max(1, Math.min(limitParam.value ?? 20, 50));
+
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      return res.status(400).json({ error: { message: "Invalid price range." } });
+    }
+    if (yearFrom !== undefined && yearTo !== undefined && yearFrom > yearTo) {
+      return res.status(400).json({ error: { message: "Invalid year range." } });
+    }
 
     const where: Prisma.GameWhereInput = {};
 
@@ -91,48 +119,76 @@ app.get("/api/games", async (req, res) => {
       };
     }
 
-    const games = await prisma.game.findMany({ where });
+    const orderByMap: Record<string, Prisma.GameOrderByWithRelationInput> = {
+      price_asc: { price: "asc" },
+      price_desc: { price: "desc" },
+      discount_desc: { discount: "desc" },
+      newest: { releaseYear: "desc" },
+    };
+    const orderBy = orderByMap[sort];
+    const needsScoreSort = Boolean(q) && !orderBy;
+    // JSON array filters (platforms/genres) are handled in-memory to avoid
+    // database-specific JSON operators; keep this path explicit to avoid silent mismatches.
+    const needsInMemoryFilter = platforms.length > 0 || genres.length > 0 || needsScoreSort;
 
-    const filtered = games.filter((game) => {
-      const gamePlatforms = Array.isArray(game.platforms) ? game.platforms : [];
-      const gameGenres = Array.isArray(game.genres) ? game.genres : [];
+    let items: Awaited<ReturnType<typeof prisma.game.findMany>> = [];
+    let total = 0;
 
-      if (platforms.length > 0) {
-        const hasPlatform = gamePlatforms.some((platform) => platforms.includes(platform));
-        if (!hasPlatform) return false;
+    if (needsInMemoryFilter) {
+      const games = await prisma.game.findMany({ where });
+
+      const filtered = games.filter((game) => {
+        const gamePlatforms = Array.isArray(game.platforms) ? game.platforms : [];
+        const gameGenres = Array.isArray(game.genres) ? game.genres : [];
+
+        if (platforms.length > 0) {
+          const hasPlatform = gamePlatforms.some((platform) => platforms.includes(platform));
+          if (!hasPlatform) return false;
+        }
+
+        if (genres.length > 0) {
+          const hasGenre = gameGenres.some((genre) => genres.includes(genre));
+          if (!hasGenre) return false;
+        }
+
+        return true;
+      });
+
+      let ordered = [...filtered];
+
+      if (orderBy) {
+        if (sort === "price_asc") {
+          ordered.sort((a, b) => a.price - b.price);
+        } else if (sort === "price_desc") {
+          ordered.sort((a, b) => b.price - a.price);
+        } else if (sort === "discount_desc") {
+          ordered.sort((a, b) => b.discount - a.discount);
+        } else if (sort === "newest") {
+          ordered.sort((a, b) => b.releaseYear - a.releaseYear);
+        }
+      } else if (needsScoreSort && q) {
+        ordered.sort((a, b) => {
+          const scoreA = scoreTitle(a.title, q);
+          const scoreB = scoreTitle(b.title, q);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return a.title.localeCompare(b.title);
+        });
       }
 
-      if (genres.length > 0) {
-        const hasGenre = gameGenres.some((genre) => genres.includes(genre));
-        if (!hasGenre) return false;
-      }
-
-      return true;
-    });
-
-    let ordered = [...filtered];
-
-    if (sort === "price_asc") {
-      ordered.sort((a, b) => a.price - b.price);
-    } else if (sort === "price_desc") {
-      ordered.sort((a, b) => b.price - a.price);
-    } else if (sort === "discount_desc") {
-      ordered.sort((a, b) => b.discount - a.discount);
-    } else if (sort === "newest") {
-      ordered.sort((a, b) => b.releaseYear - a.releaseYear);
-    } else if (q) {
-      ordered.sort((a, b) => {
-        const scoreA = scoreTitle(a.title, q);
-        const scoreB = scoreTitle(b.title, q);
-        if (scoreB !== scoreA) return scoreB - scoreA;
-        return a.title.localeCompare(b.title);
+      total = ordered.length;
+      const start = (page - 1) * limit;
+      items = ordered.slice(start, start + limit);
+    } else {
+      total = await prisma.game.count({ where });
+      items = await prisma.game.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
       });
     }
 
-    const total = ordered.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
-    const start = (page - 1) * limit;
-    const items = ordered.slice(start, start + limit);
 
     res.json({
       items,

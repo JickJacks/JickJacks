@@ -43,8 +43,8 @@ const buildUrl = (path: string, params?: Record<string, string | number | undefi
   return url.toString();
 };
 
-const request = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url);
+const request = async <T>(url: string, signal?: AbortSignal): Promise<T> => {
+  const response = await fetch(url, signal ? { signal } : undefined);
   if (!response.ok) {
     const message = `Request failed with status ${response.status}`;
     throw new Error(message);
@@ -52,10 +52,13 @@ const request = async <T>(url: string): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-export const fetchGames = (params: Record<string, string | number | undefined>) =>
-  request<GamesResponse<ApiGame>>(buildUrl("/api/games", params));
+export const fetchGames = (
+  params: Record<string, string | number | undefined>,
+  signal?: AbortSignal
+) => request<GamesResponse<ApiGame>>(buildUrl("/api/games", params), signal);
 
-export const fetchGame = (idOrSlug: string) =>
-  request<ApiGame>(buildUrl(`/api/games/${idOrSlug}`));
+export const fetchGame = (idOrSlug: string, signal?: AbortSignal) =>
+  request<ApiGame>(buildUrl(`/api/games/${idOrSlug}`), signal);
 
-export const fetchFilters = () => request<FiltersResponse>(buildUrl("/api/filters"));
+export const fetchFilters = (signal?: AbortSignal) =>
+  request<FiltersResponse>(buildUrl("/api/filters"), signal);

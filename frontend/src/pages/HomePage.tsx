@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import FiltersSidebar from "../components/FiltersSidebar";
 import GameCard from "../components/GameCard";
@@ -7,9 +7,9 @@ import type { LayoutContextValue } from "../components/Layout";
 import { useFilters } from "../context/FilterContext";
 import { gamesData } from "../data/gamesData";
 import { useTranslation } from "../hooks/useTranslation";
-import { fetchGames, type ApiGame } from "../services/api";
+import { fetchGames } from "../services/api";
 import { useToast } from "../components/Toast";
-import type { Game, PriceHistoryPoint } from "../types/game";
+import type { PriceHistoryPoint } from "../types/game";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -24,19 +24,17 @@ export default function HomePage() {
   const [games, setGames] = useState(gamesData.slice(0, ITEMS_PER_PAGE));
   const [total, setTotal] = useState(gamesData.length);
   const [serverUnavailable, setServerUnavailable] = useState(false);
+  const requestIdRef = useRef(0);
+  const fallbackToastShownRef = useRef(false);
 
   const filteredGames = useMemo(() => filterGames(gamesData), [filterGames]);
   const visibleGames = serverUnavailable ? filteredGames.slice(0, page * ITEMS_PER_PAGE) : games;
 
   useEffect(() => {
-    setIsLoading(true);
-    setPage(1);
-    const handle = window.setTimeout(() => setIsLoading(false), 300);
-    return () => window.clearTimeout(handle);
-  }, [debouncedQuery, selectedPlatforms, selectedGenres, priceRange, yearRange]);
-
-  useEffect(() => {
     let isActive = true;
+    const currentRequestId = requestIdRef.current + 1;
+    requestIdRef.current = currentRequestId;
+    const controller = new AbortController();
     const run = async () => {
       setIsLoading(true);
       try {
@@ -44,55 +42,68 @@ export default function HomePage() {
           ...getApiParams(),
           page,
           limit: ITEMS_PER_PAGE,
-        });
-        if (!isActive) return;
+        }, controller.signal);
+        if (!isActive || requestIdRef.current !== currentRequestId) return;
         setServerUnavailable(false);
+        fallbackToastShownRef.current = false;
         setTotal(response.meta.total);
-        const mapped = response.items.map((item) => ({
-          id: String(item.id),
-          title: item.title,
-          description: item.description ?? "",
-          coverImage: item.thumbnail,
-          screenshots: [],
-          platforms: Array.isArray(item.platforms) ? item.platforms : [],
-          genres: Array.isArray(item.genres) ? item.genres : [],
-          releaseDate: item.releaseYear ? `${item.releaseYear}-01-01` : "1970-01-01",
-          developer: "",
-          publisher: "",
-          prices: [
-            {
-              store: t("api_best_price_store"),
-              storeId: "api",
-              storeLogo: "",
-              price: item.price,
-              currency: "EUR",
-              stock: "in_stock",
-              url: "#",
-              lastUpdated: new Date().toISOString(),
-            },
-          ],
-          priceHistory: Array.isArray(item.priceHistory)
-            ? (item.priceHistory as PriceHistoryPoint[])
-            : [],
-        }));
+        const mapped = response.items.map((item) => {
+          const platforms = Array.isArray(item.platforms) ? item.platforms : [];
+          const genres = Array.isArray(item.genres) ? item.genres : [];
+          if (typeof item.id !== "number" || typeof item.title !== "string") {
+            console.warn("API game schema mismatch.", item);
+          }
+          return {
+            id: String(item.id ?? ""),
+            title: item.title ?? "Unknown title",
+            description: item.description ?? "",
+            coverImage: item.thumbnail ?? "",
+            screenshots: [],
+            platforms,
+            genres,
+            releaseDate: item.releaseYear ? `${item.releaseYear}-01-01` : "1970-01-01",
+            developer: "",
+            publisher: "",
+            prices: [
+              {
+                store: t("api_best_price_store"),
+                storeId: "api",
+                storeLogo: "",
+                price: Number.isFinite(item.price) ? item.price : 0,
+                currency: "EUR",
+                stock: "in_stock",
+                url: "#",
+                lastUpdated: new Date().toISOString(),
+              },
+            ],
+            priceHistory: Array.isArray(item.priceHistory)
+              ? (item.priceHistory as PriceHistoryPoint[])
+              : [],
+          };
+        });
         setGames((prev) => (page === 1 ? mapped : [...prev, ...mapped]));
       } catch (error) {
-        if (!isActive) return;
-        if (!serverUnavailable) {
+        if (!isActive || requestIdRef.current !== currentRequestId) return;
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        if (!fallbackToastShownRef.current) {
           showToast(t("api_fallback_banner"), "info");
+          fallbackToastShownRef.current = true;
         }
         setServerUnavailable(true);
         setTotal(filteredGames.length);
         setGames(filteredGames.slice(0, page * ITEMS_PER_PAGE));
       } finally {
-        if (isActive) setIsLoading(false);
+        if (isActive && requestIdRef.current === currentRequestId) setIsLoading(false);
       }
     };
     run();
     return () => {
       isActive = false;
+      controller.abort();
     };
-  }, [page, debouncedQuery, selectedPlatforms, selectedGenres, priceRange, yearRange, getApiParams, filteredGames, serverUnavailable, showToast, t]);
+  }, [page, debouncedQuery, selectedPlatforms, selectedGenres, priceRange, yearRange, getApiParams, filteredGames, showToast, t]);
 
   if (gamesData.length === 0) {
     return (

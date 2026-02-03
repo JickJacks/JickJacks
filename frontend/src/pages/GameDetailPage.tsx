@@ -1,5 +1,5 @@
 import { Bell, Heart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import PriceComparisonTable from "../components/PriceComparisonTable";
 import PriceHistoryChart from "../components/PriceHistoryChart";
@@ -16,65 +16,83 @@ export default function GameDetailPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [serverUnavailable, setServerUnavailable] = useState(false);
+  const requestIdRef = useRef(0);
+  const fallbackToastShownRef = useRef(false);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [isProcessing, setIsProcessing] = useState(false);
   const { settings } = useSettings();
   const { t } = useTranslation();
   const { showToast } = useToast();
 
-  const mapApiGameToGame = (item: ApiGame): Game => ({
-    id: String(item.id),
-    title: item.title,
-    description: item.description ?? "",
-    coverImage: item.thumbnail,
-    screenshots: [],
-    platforms: Array.isArray(item.platforms) ? item.platforms : [],
-    genres: Array.isArray(item.genres) ? item.genres : [],
-    releaseDate: item.releaseYear ? `${item.releaseYear}-01-01` : "1970-01-01",
-    developer: "",
-    publisher: "",
-    prices: [
-      {
-        store: t("api_best_price_store"),
-        storeId: "api",
-        storeLogo: "",
-        price: item.price,
-        currency: "EUR",
-        stock: "in_stock",
-        url: "#",
-        lastUpdated: new Date().toISOString(),
-      },
-    ],
-    priceHistory: Array.isArray(item.priceHistory) ? (item.priceHistory as PriceHistoryPoint[]) : [],
-  });
+  const mapApiGameToGame = (item: ApiGame): Game => {
+    if (typeof item.id !== "number" || typeof item.title !== "string") {
+      console.warn("API game schema mismatch.", item);
+    }
+    return {
+      id: String(item.id ?? ""),
+      title: item.title ?? "Unknown title",
+      description: item.description ?? "",
+      coverImage: item.thumbnail ?? "",
+      screenshots: [],
+      platforms: Array.isArray(item.platforms) ? item.platforms : [],
+      genres: Array.isArray(item.genres) ? item.genres : [],
+      releaseDate: item.releaseYear ? `${item.releaseYear}-01-01` : "1970-01-01",
+      developer: "",
+      publisher: "",
+      prices: [
+        {
+          store: t("api_best_price_store"),
+          storeId: "api",
+          storeLogo: "",
+          price: Number.isFinite(item.price) ? item.price : 0,
+          currency: "EUR",
+          stock: "in_stock",
+          url: "#",
+          lastUpdated: new Date().toISOString(),
+        },
+      ],
+      priceHistory: Array.isArray(item.priceHistory)
+        ? (item.priceHistory as PriceHistoryPoint[])
+        : [],
+    };
+  };
 
   useEffect(() => {
     let isActive = true;
+    const currentRequestId = requestIdRef.current + 1;
+    requestIdRef.current = currentRequestId;
+    const controller = new AbortController();
     const run = async () => {
       setIsLoading(true);
       try {
         if (!id) throw new Error("Missing id");
-        const response = await fetchGame(id);
-        if (!isActive) return;
+        const response = await fetchGame(id, controller.signal);
+        if (!isActive || requestIdRef.current !== currentRequestId) return;
         setServerUnavailable(false);
+        fallbackToastShownRef.current = false;
         setGame(mapApiGameToGame(response));
       } catch (error) {
-        if (!isActive) return;
-        if (!serverUnavailable) {
+        if (!isActive || requestIdRef.current !== currentRequestId) return;
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        if (!fallbackToastShownRef.current) {
           showToast(t("api_fallback_banner"), "info");
+          fallbackToastShownRef.current = true;
         }
         setServerUnavailable(true);
         const fallback = gamesData.find((deal) => deal.id === id) ?? null;
         setGame(fallback);
       } finally {
-        if (isActive) setIsLoading(false);
+        if (isActive && requestIdRef.current === currentRequestId) setIsLoading(false);
       }
     };
     run();
     return () => {
       isActive = false;
+      controller.abort();
     };
-  }, [id, serverUnavailable, showToast, t]);
+  }, [id, showToast, t]);
 
   if (isLoading) {
     return (

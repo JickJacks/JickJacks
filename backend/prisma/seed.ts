@@ -31,6 +31,9 @@ const releaseYearFromDate = (value: string | undefined) => {
   return Number.isNaN(year) ? 0 : year;
 };
 
+const normalizeStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+
 async function main() {
   const module = await import(dataPath);
   const games = module.gamesData as Array<{
@@ -50,13 +53,15 @@ async function main() {
 
     const { price, originalPrice, discount } = derivePricing(game.prices);
     const releaseYear = releaseYearFromDate(game.releaseDate);
+    const platforms = normalizeStringArray(game.platforms);
+    const genres = normalizeStringArray(game.genres);
 
     await prisma.game.upsert({
       where: { slug },
       update: {
         title: game.title,
-        platforms: game.platforms,
-        genres: game.genres,
+        platforms,
+        genres,
         price,
         originalPrice,
         discount,
@@ -68,8 +73,8 @@ async function main() {
       create: {
         title: game.title,
         slug,
-        platforms: game.platforms,
-        genres: game.genres,
+        platforms,
+        genres,
         price,
         originalPrice,
         discount,
