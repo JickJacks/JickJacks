@@ -1,27 +1,68 @@
-[![MasterHead](https://user-images.githubusercontent.com/95478989/198955082-6e78ebb5-e1e4-49f9-8d32-6e5af3984dcd.gif)](https://rishavchanda.io)
-<h1 align="center">NickName: JickJacks</h1>
-<h3 align="center">Italian Developer And Gamer from Italy</h3>
+# GameDeals Italia
 
-<p align="left"> <img src="https://komarev.com/ghpvc/?username=jickjacks&label=Profile%20views&color=0e75b6&style=flat" alt="jickjacks" /> </p>
+Piattaforma italiana per il confronto prezzi di videogiochi con offerte aggiornate, wishlist e alert sui ribassi. Il progetto è diviso in frontend React + backend Node.js come base per l'integrazione delle API (IGDB, IsThereAnyDeal) e scraping.
 
-<p align="left"> <a href="https://twitter.com/" target="blank"><img src="https://img.shields.io/twitter/follow/?logo=twitter&style=for-the-badge" alt="" /></a> </p>
+## ✨ Funzionalità principali
 
-- 🔭 I’m currently working on **MissioneSettimanale.jar**
+- Confronto prezzi da store verificati (Instant Gaming, G2A, Eneba, CDKeys, Kinguin).
+- Filtri avanzati per piattaforme, range prezzo e sconto minimo.
+- Wishlist e alert personalizzati.
+- Storico prezzi con grafici Recharts.
 
-- 🌱 I’m currently learning **Java, Python**
+## 📦 Struttura repository
 
-- 💬 Ask me about **Minecraft Plugin**
+```
+frontend/  # React + Tailwind UI
+backend/   # Express API
+```
 
-<h3 align="left">Connect with me:</h3>
-<p align="left">
-<a href="https://discord.gg/https://discord.gg/pX4SZxeUmC" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/discord.svg" alt="https://discord.gg/pX4SZxeUmC" height="30" width="40" /></a>
-</p>
+## 🚀 Avvio rapido
 
-<h3 align="left">Languages and Tools:</h3>
-<p align="left"> <a href="https://www.blender.org/" target="_blank" rel="noreferrer"> <img src="https://download.blender.org/branding/community/blender_community_badge_white.svg" alt="blender" width="40" height="40"/> </a> <a href="https://www.adobe.com/in/products/illustrator.html" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/adobe_illustrator/adobe_illustrator-icon.svg" alt="illustrator" width="40" height="40"/> </a> <a href="https://www.java.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="java" width="40" height="40"/> </a> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="40" height="40"/> </a> <a href="https://www.linux.org/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" alt="linux" width="40" height="40"/> </a> <a href="https://www.microsoft.com/en-us/sql-server" target="_blank" rel="noreferrer"> <img src="https://www.svgrepo.com/show/303229/microsoft-sql-server-logo.svg" alt="mssql" width="40" height="40"/> </a> <a href="https://www.mysql.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original-wordmark.svg" alt="mysql" width="40" height="40"/> </a> <a href="https://www.oracle.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/oracle/oracle-original.svg" alt="oracle" width="40" height="40"/> </a> <a href="https://www.photoshop.com/en" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/photoshop/photoshop-line.svg" alt="photoshop" width="40" height="40"/> </a> <a href="https://www.python.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a> <a href="https://www.sqlite.org/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/sqlite/sqlite-icon.svg" alt="sqlite" width="40" height="40"/> </a> <a href="https://unity.com/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/unity3d/unity3d-icon.svg" alt="unity" width="40" height="40"/> </a> <a href="https://unrealengine.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/kenangundogan/fontisto/036b7eca71aab1bef8e6a0518f7329f13ed62f6b/icons/svg/brand/unreal-engine.svg" alt="unreal" width="40" height="40"/> </a> <a href="https://www.adobe.com/products/xd.html" target="_blank" rel="noreferrer"> <img src="https://cdn.worldvectorlogo.com/logos/adobe-xd.svg" alt="xd" width="40" height="40"/> </a> </p>
+### Frontend
 
-<p><img align="left" src="https://github-readme-stats.vercel.app/api/top-langs?username=jickjacks&show_icons=true&locale=en&layout=compact" alt="jickjacks" /></p>
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-<p>&nbsp;<img align="center" src="https://github-readme-stats.vercel.app/api?username=jickjacks&show_icons=true&locale=en" alt="jickjacks" /></p>
+#### Variabili d'ambiente (frontend)
 
-<p><img align="center" src="https://github-readme-streak-stats.herokuapp.com/?user=jickjacks&" alt="jickjacks" /></p>
+Imposta `VITE_API_BASE` per puntare al backend remoto:
+
+```
+VITE_API_BASE=https://<your-backend-host>
+```
+
+### Backend
+
+```bash
+cd backend
+npm install
+npx prisma migrate dev --name init
+npm run seed
+npm run dev
+```
+
+## 🧱 Design System
+
+Le variabili colore e gli stili principali sono gestiti in `frontend/src/styles/index.css` e nel tema Tailwind in `frontend/tailwind.config.js`.
+
+## 🔑 Variabili d'ambiente (backend)
+
+Crea un file `.env` in `backend/`:
+
+```
+PORT=4000
+CORS_ORIGIN=http://localhost:5173
+DATABASE_URL="file:./dev.db"
+CORS_ORIGIN=http://localhost:5173
+JWT_SECRET=super-secret
+ALERT_CHECK_INTERVAL_MS=60000
+ENABLE_ALERT_CHECKER=true
+```
+
+Per deploy remoto:
+- Imposta `CORS_ORIGIN` al dominio del frontend (puoi separare più origini con virgole).
+- `DATABASE_URL` deve puntare a un file SQLite scrivibile o a un database remoto supportato da Prisma.
+- Su piattaforme serverless (es. Vercel) imposta `ENABLE_ALERT_CHECKER=false` e usa un worker/cron esterno per gli alert.
