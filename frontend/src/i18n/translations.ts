@@ -158,6 +158,32 @@ export const translations = {
     es: "Aplicar",
     fr: "Appliquer",
   },
+  filters_coming_soon: {
+    it: "Disponibile a breve",
+    en: "Coming soon",
+    es: "Próximamente",
+    fr: "Bientôt disponible",
+  },
+
+  // ─── API FALLBACK ───
+  api_fallback_banner: {
+    it: "Server non disponibile — mostra dati demo locali.",
+    en: "Server unavailable — showing local demo data.",
+    es: "Servidor no disponible — mostrando datos de demostración locales.",
+    fr: "Serveur indisponible — affichage des données locales de démonstration.",
+  },
+  api_best_price_store: {
+    it: "Miglior prezzo",
+    en: "Best price",
+    es: "Mejor precio",
+    fr: "Meilleur prix",
+  },
+  loading_message: {
+    it: "Caricamento...",
+    en: "Loading...",
+    es: "Cargando...",
+    fr: "Chargement...",
+  },
 
   // ─── WISHLIST PAGE ───
   wishlist_page_title: {

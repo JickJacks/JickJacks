@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -7,147 +7,19 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id                   String           @id @default(uuid())
-  email                String           @unique
-  username             String           @unique
-  password             String
-  firstName            String?
-  lastName             String?
-  avatar               String?
-  emailVerified        Boolean          @default(false)
-  verificationToken    String?          @unique
-  resetPasswordToken   String?          @unique
-  resetPasswordExpires DateTime?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-
-  wishlist    WishlistItem[]
-  priceAlerts PriceAlert[]
-  storeReviews StoreReview[]
-  preferences UserPreferences?
-
-  @@index([email])
-  @@index([username])
-}
-
-model UserPreferences {
-  id                 String   @id @default(uuid())
-  userId             String   @unique
-  emailNotifications Boolean  @default(true)
-  pushNotifications  Boolean  @default(false)
-  preferredPlatforms String[] @default([])
-  preferredStores    String[] @default([])
-  minDiscountAlert   Int      @default(50)
-  currency           String   @default("EUR")
-  language           String   @default("it")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
 model Game {
-  id              String      @id @default(uuid())
-  title           String
-  slug            String      @unique
-  description     String?     @db.Text
-  coverImage      String?
-  screenshots     String[]    @default([])
-  releaseDate     DateTime?
-  metacriticScore Int?
-  userScore       Float?
-  igdbId          Int?        @unique
-  igdbRating      Float?
-  steamAppId      Int?        @unique
-  epicStoreSlug   String?
-  gogId           Int?
-
-  platforms Platform[]
-  genres    Genre[]
-  prices    GamePrice[]
-  wishlistedBy WishlistItem[]
-  priceAlerts  PriceAlert[]
-}
-
-model Platform {
-  id    String @id @default(uuid())
-  name  String @unique
-  games Game[]
-}
-
-model Genre {
-  id    String @id @default(uuid())
-  name  String @unique
-  games Game[]
-}
-
-model Store {
-  id        String        @id @default(uuid())
-  name      String
-  slug      String        @unique
-  website   String
-  logoUrl   String?
-  isOfficial Boolean      @default(false)
-
-  prices   GamePrice[]
-  reviews  StoreReview[]
-}
-
-model GamePrice {
-  id            String   @id @default(uuid())
-  gameId        String
-  storeId       String
+  id            Int      @id @default(autoincrement())
+  title         String
+  slug          String   @unique
+  platforms     Json
+  genres        Json
   price         Float
-  originalPrice Float
+  originalPrice Float?
   discount      Int
-  currency      String  @default("EUR")
-  updatedAt     DateTime @default(now())
-
-  game  Game  @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
-
-  @@index([gameId])
-  @@index([storeId])
-}
-
-model WishlistItem {
-  id        String   @id @default(uuid())
-  userId    String
-  gameId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, gameId])
-}
-
-model PriceAlert {
-  id          String   @id @default(uuid())
-  userId      String
-  gameId      String
-  targetPrice Float
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([gameId])
-}
-
-model StoreReview {
-  id        String   @id @default(uuid())
-  userId    String
-  storeId   String
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
-
-  @@index([storeId])
+  releaseYear   Int
+  thumbnail     String
+  description   String?
+  priceHistory  Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Game } from "../types/game";
 import useDebounce from "../hooks/useDebounce";
+import { fetchFilters } from "../services/api";
 
 const DEFAULT_PRICE_RANGE = { min: 0, max: 80 };
 
@@ -12,8 +13,10 @@ type FilterContextValue = {
   debouncedQuery: string;
   setSearchQuery: (value: string) => void;
   selectedPlatforms: string[];
+  availablePlatforms: string[];
   togglePlatform: (platform: string) => void;
   selectedGenres: string[];
+  availableGenres: string[];
   toggleGenre: (genre: string) => void;
   priceRange: PriceRange;
   setPriceRange: (range: PriceRange) => void;
@@ -22,6 +25,7 @@ type FilterContextValue = {
   setYearRange: (range: [number, number]) => void;
   clearFilters: () => void;
   filterGames: (games: Game[]) => Game[];
+  getApiParams: () => Record<string, string | number | undefined>;
 };
 
 const FilterContext = createContext<FilterContextValue | undefined>(undefined);
@@ -30,11 +34,35 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [availablePlatforms, setAvailablePlatforms] = useState<string[]>([]);
+  const [availableGenres, setAvailableGenres] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
   const [yearRange, setYearRange] = useState<[number, number]>([2016, 2024]);
-  const releaseYears = useMemo(() => Array.from({ length: 9 }, (_, i) => 2016 + i), []);
+  const [releaseYears, setReleaseYears] = useState<number[]>(
+    Array.from({ length: 9 }, (_, i) => 2016 + i)
+  );
 
   const debouncedQuery = useDebounce(searchQuery, 300).trim().toLowerCase();
+
+  useEffect(() => {
+    let isActive = true;
+    fetchFilters()
+      .then((data) => {
+        if (!isActive) return;
+        if (data.platforms?.length) setAvailablePlatforms(data.platforms);
+        if (data.genres?.length) setAvailableGenres(data.genres);
+        if (data.years?.length) setReleaseYears(data.years);
+        if (data.years?.length) {
+          setYearRange([data.years[0], data.years[data.years.length - 1]]);
+        }
+      })
+      .catch(() => {
+        if (!isActive) return;
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms((prev) =>
@@ -100,13 +128,25 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     };
   }, [debouncedQuery, selectedPlatforms, selectedGenres, priceRange, yearRange]);
 
+  const getApiParams = () => ({
+    q: debouncedQuery || undefined,
+    platform: selectedPlatforms.length > 0 ? selectedPlatforms.join(",") : undefined,
+    genres: selectedGenres.length > 0 ? selectedGenres.join(",") : undefined,
+    minPrice: priceRange.min,
+    maxPrice: priceRange.max,
+    yearFrom: yearRange[0],
+    yearTo: yearRange[1],
+  });
+
   const value = {
     searchQuery,
     debouncedQuery,
     setSearchQuery,
     selectedPlatforms,
+    availablePlatforms,
     togglePlatform,
     selectedGenres,
+    availableGenres,
     toggleGenre,
     priceRange,
     setPriceRange,
@@ -115,6 +155,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     setYearRange,
     clearFilters,
     filterGames,
+    getApiParams,
   };
 
   return <FilterContext.Provider value={value}>{children}</FilterContext.Provider>;

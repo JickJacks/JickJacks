@@ -1,5 +1,5 @@
 import { Bell, Heart } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PriceComparisonTable from "../components/PriceComparisonTable";
 import PriceHistoryChart from "../components/PriceHistoryChart";
@@ -7,14 +7,84 @@ import { gamesData } from "../data/gamesData";
 import { useWishlist } from "../context/WishlistContext";
 import { useSettings } from "../context/SettingsContext";
 import { useTranslation } from "../hooks/useTranslation";
+import { fetchGame, type ApiGame } from "../services/api";
+import { useToast } from "../components/Toast";
+import type { Game, PriceHistoryPoint } from "../types/game";
 
 export default function GameDetailPage() {
   const { id } = useParams();
-  const game = gamesData.find((deal) => deal.id === id);
+  const [game, setGame] = useState<Game | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [serverUnavailable, setServerUnavailable] = useState(false);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [isProcessing, setIsProcessing] = useState(false);
   const { settings } = useSettings();
   const { t } = useTranslation();
+  const { showToast } = useToast();
+
+  const mapApiGameToGame = (item: ApiGame): Game => ({
+    id: String(item.id),
+    title: item.title,
+    description: item.description ?? "",
+    coverImage: item.thumbnail,
+    screenshots: [],
+    platforms: Array.isArray(item.platforms) ? item.platforms : [],
+    genres: Array.isArray(item.genres) ? item.genres : [],
+    releaseDate: item.releaseYear ? `${item.releaseYear}-01-01` : "1970-01-01",
+    developer: "",
+    publisher: "",
+    prices: [
+      {
+        store: t("api_best_price_store"),
+        storeId: "api",
+        storeLogo: "",
+        price: item.price,
+        currency: "EUR",
+        stock: "in_stock",
+        url: "#",
+        lastUpdated: new Date().toISOString(),
+      },
+    ],
+    priceHistory: Array.isArray(item.priceHistory) ? (item.priceHistory as PriceHistoryPoint[]) : [],
+  });
+
+  useEffect(() => {
+    let isActive = true;
+    const run = async () => {
+      setIsLoading(true);
+      try {
+        if (!id) throw new Error("Missing id");
+        const response = await fetchGame(id);
+        if (!isActive) return;
+        setServerUnavailable(false);
+        setGame(mapApiGameToGame(response));
+      } catch (error) {
+        if (!isActive) return;
+        if (!serverUnavailable) {
+          showToast(t("api_fallback_banner"), "info");
+        }
+        setServerUnavailable(true);
+        const fallback = gamesData.find((deal) => deal.id === id) ?? null;
+        setGame(fallback);
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
+    };
+    run();
+    return () => {
+      isActive = false;
+    };
+  }, [id, serverUnavailable, showToast, t]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg-primary text-text-primary">
+        <div className="mx-auto max-w-[900px] px-4 py-16 text-center text-text-secondary">
+          {t("loading_message")}
+        </div>
+      </div>
+    );
+  }
 
   if (!game) {
     return (
@@ -56,6 +126,11 @@ export default function GameDetailPage() {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary">
       <div className="mx-auto max-w-[1100px] px-4 py-10">
+        {serverUnavailable ? (
+          <div className="mb-4 rounded-md border border-border-color bg-bg-surface/70 px-4 py-2 text-xs text-text-secondary">
+            {t("api_fallback_banner")}
+          </div>
+        ) : null}
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <div className="overflow-hidden rounded-lg border border-border-color bg-bg-surface">
             <img src={game.coverImage} alt={game.title} className="h-full w-full object-cover" />

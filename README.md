@@ -31,6 +31,8 @@ npm run dev
 ```bash
 cd backend
 npm install
+npx prisma migrate dev --name init
+npm run seed
 npm run dev
 ```
 
@@ -45,6 +47,7 @@ Crea un file `.env` in `backend/`:
 ```
 PORT=4000
 CORS_ORIGIN=http://localhost:5173
-DATABASE_URL=postgresql://user:password@localhost:5432/gamedeals
+DATABASE_URL="file:./dev.db"
+CORS_ORIGIN=http://localhost:5173
 JWT_SECRET=super-secret
 ```

@@ -32,7 +32,7 @@ type FiltersSidebarProps = {
 };
 
 export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps) {
-  const [advancedOpen, setAdvancedOpen] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const { t } = useTranslation();
   const {
     selectedPlatforms,
@@ -42,18 +42,24 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
     priceRange,
     setPriceRange,
     releaseYears,
+    availablePlatforms,
+    availableGenres,
     yearRange,
     setYearRange,
     clearFilters,
   } = useFilters();
+  const platformOptions = availablePlatforms.length > 0 ? availablePlatforms : platforms;
+  const genreOptions = availableGenres.length > 0 ? availableGenres : genres;
+  const advancedDisabled = true;
+  const advancedTooltip = t("filters_coming_soon");
 
   const platformCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    platforms.forEach((platform) => {
+    platformOptions.forEach((platform) => {
       counts[platform] = gamesData.filter((game) => game.platforms.includes(platform)).length;
     });
     return counts;
-  }, []);
+  }, [platformOptions]);
 
   return (
     <>
@@ -93,7 +99,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
             <div>
               <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_platforms")}</p>
               <div className="mt-3 space-y-2">
-                {platforms.map((platform) => (
+                {platformOptions.map((platform) => (
                   <label key={platform} className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <input
@@ -151,7 +157,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
             <div>
               <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_genre")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {genres.map((genre) => (
+                {genreOptions.map((genre) => (
                   <label
                     key={genre}
                     className={`rounded-full border px-3 py-1 text-xs transition ${
@@ -208,11 +214,14 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
               <button
                 className="flex w-full items-center justify-between text-xs font-semibold uppercase text-text-muted"
                 onClick={() => setAdvancedOpen((prev) => !prev)}
+                disabled={advancedDisabled}
+                title={advancedTooltip}
+                aria-disabled={advancedDisabled}
               >
                 {t("filters_advanced")}
                 <ChevronDown className={`h-4 w-4 transition ${advancedOpen ? "rotate-180" : ""}`} />
               </button>
-              {advancedOpen ? (
+              {advancedOpen && !advancedDisabled ? (
                 <div className="mt-3 space-y-2">
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4" />
