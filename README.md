@@ -26,6 +26,14 @@ npm install
 npm run dev
 ```
 
+#### Variabili d'ambiente (frontend)
+
+Imposta `VITE_API_BASE` per puntare al backend remoto:
+
+```
+VITE_API_BASE=https://<your-backend-host>
+```
+
 ### Backend
 
 ```bash
@@ -50,4 +58,11 @@ CORS_ORIGIN=http://localhost:5173
 DATABASE_URL="file:./dev.db"
 CORS_ORIGIN=http://localhost:5173
 JWT_SECRET=super-secret
+ALERT_CHECK_INTERVAL_MS=60000
+ENABLE_ALERT_CHECKER=true
 ```
+
+Per deploy remoto:
+- Imposta `CORS_ORIGIN` al dominio del frontend (puoi separare più origini con virgole).
+- `DATABASE_URL` deve puntare a un file SQLite scrivibile o a un database remoto supportato da Prisma.
+- Su piattaforme serverless (es. Vercel) imposta `ENABLE_ALERT_CHECKER=false` e usa un worker/cron esterno per gli alert.

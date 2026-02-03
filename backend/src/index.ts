@@ -9,7 +9,24 @@ import { z } from "zod";
 export const app = express();
 export const prisma = new PrismaClient();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? "*" }));
+const corsOrigins = (process.env.CORS_ORIGIN ?? "*")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || corsOrigins.includes("*")) {
+        return callback(null, true);
+      }
+      if (corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+  })
+);
 app.use(express.json());
 
 const sanitizeQuery = (value: string) =>
@@ -499,8 +516,14 @@ const startAlertChecker = () => {
 };
 
 const port = Number(process.env.PORT ?? 4000);
-if (process.env.NODE_ENV !== "test") {
-  startAlertChecker();
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const enableAlertChecker =
+  process.env.ENABLE_ALERT_CHECKER === undefined ? true : process.env.ENABLE_ALERT_CHECKER === "true";
+
+if (process.env.NODE_ENV !== "test" && !isServerless) {
+  if (enableAlertChecker) {
+    startAlertChecker();
+  }
   app.listen(port, () => {
     console.log(`GameDeals Italia API listening on port ${port}`);
   });
