@@ -1,23 +1,26 @@
 import { Link } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function WishlistPage() {
   const { getWishlistGames, removeFromWishlist } = useWishlist();
+  const { t } = useTranslation();
   const wishlistGames = getWishlistGames();
+  const title = t("wishlist_page_title").replace("{count}", wishlistGames.length.toString());
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-8 md:px-8">
-      <h1 className="text-2xl font-semibold">My Wishlist ({wishlistGames.length} games)</h1>
+      <h1 className="text-2xl font-semibold">{title}</h1>
       {wishlistGames.length === 0 ? (
         <div className="mt-6 rounded-lg border border-border-color bg-bg-surface/70 p-8 text-center text-text-secondary">
-          Nessun gioco salvato.
+          {t("wishlist_page_empty")}
           <div className="mt-4">
             <Link
               to="/"
               className="inline-flex rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white"
             >
-              Browse games
+              {t("wishlist_page_browse")}
             </Link>
           </div>
         </div>
@@ -53,10 +56,10 @@ export default function WishlistPage() {
                   <button
                     onClick={() => removeFromWishlist(game.id)}
                     className="mt-4 flex items-center gap-2 text-xs text-error"
-                    aria-label="Remove from wishlist"
+                    aria-label={t("wishlist_page_remove_label")}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Remove from wishlist
+                    {t("wishlist_page_remove")}
                   </button>
                 </div>
               </div>

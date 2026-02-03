@@ -25,13 +25,34 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 const STORAGE_KEY = "jickjacks_settings";
+const LANGUAGE_MAP: Record<string, AppSettings["language"]> = {
+  Italiano: "it",
+  English: "en",
+  Español: "es",
+  Français: "fr",
+};
+
+const LANGUAGE_OPTIONS: AppSettings["language"][] = ["it", "en", "es", "fr"];
+
+function normalizeLanguage(value: unknown): AppSettings["language"] {
+  if (typeof value === "string") {
+    if (LANGUAGE_OPTIONS.includes(value as AppSettings["language"])) {
+      return value as AppSettings["language"];
+    }
+    const mapped = LANGUAGE_MAP[value];
+    if (mapped) {
+      return mapped;
+    }
+  }
+  return DEFAULT_SETTINGS.language;
+}
 
 function loadSettings(): AppSettings {
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      return { ...DEFAULT_SETTINGS, ...parsed, language: normalizeLanguage(parsed?.language) };
     }
   } catch (error) {
     console.error("Failed to load settings", error);

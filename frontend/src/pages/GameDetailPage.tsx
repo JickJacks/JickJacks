@@ -5,19 +5,23 @@ import PriceComparisonTable from "../components/PriceComparisonTable";
 import PriceHistoryChart from "../components/PriceHistoryChart";
 import { gamesData } from "../data/gamesData";
 import { useWishlist } from "../context/WishlistContext";
+import { useSettings } from "../context/SettingsContext";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function GameDetailPage() {
   const { id } = useParams();
   const game = gamesData.find((deal) => deal.id === id);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { settings } = useSettings();
+  const { t } = useTranslation();
 
   if (!game) {
     return (
       <div className="min-h-screen bg-bg-primary text-text-primary">
         <div className="mx-auto max-w-[900px] px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold">Gioco non trovato</h1>
-          <p className="mt-2 text-text-secondary">Controlla l'ID o torna alla home.</p>
+          <h1 className="text-2xl font-bold">{t("game_not_found_title")}</h1>
+          <p className="mt-2 text-text-secondary">{t("game_not_found_desc")}</p>
         </div>
       </div>
     );
@@ -25,6 +29,19 @@ export default function GameDetailPage() {
 
   const bestPrice = [...game.prices].sort((a, b) => a.price - b.price)[0];
   const inWishlist = isInWishlist(game.id);
+  const localeMap: Record<typeof settings.language, string> = {
+    it: "it-IT",
+    en: "en-US",
+    es: "es-ES",
+    fr: "fr-FR",
+  };
+  const locale = localeMap[settings.language] ?? "it-IT";
+  const releaseLabel = t("game_release_date").replace("{date}", game.releaseDate);
+  const storeLabel = t("game_store_label").replace("{store}", bestPrice.store);
+  const lastUpdateLabel = t("game_last_update").replace(
+    "{date}",
+    new Date(bestPrice.lastUpdated).toLocaleDateString(locale)
+  );
 
   const handleWishlistToggle = () => {
     setIsProcessing(true);
@@ -64,16 +81,16 @@ export default function GameDetailPage() {
                 </span>
               ))}
             </div>
-            <p className="mt-4 text-xs text-text-muted">Data uscita: {game.releaseDate}</p>
+            <p className="mt-4 text-xs text-text-muted">{releaseLabel}</p>
             <div className="mt-6 rounded-lg border border-border-color bg-bg-surface/70 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-text-muted">Miglior prezzo</p>
+                  <p className="text-xs text-text-muted">{t("game_best_price")}</p>
                   <p className="font-mono text-2xl text-success">€{bestPrice.price.toFixed(2)}</p>
-                  <p className="text-xs text-text-muted">Store: {bestPrice.store}</p>
+                  <p className="text-xs text-text-muted">{storeLabel}</p>
                 </div>
                 <div className="text-right text-xs text-text-muted">
-                  Ultimo update {new Date(bestPrice.lastUpdated).toLocaleDateString("it-IT")}
+                  {lastUpdateLabel}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
@@ -83,10 +100,10 @@ export default function GameDetailPage() {
                   disabled={isProcessing}
                 >
                   <Heart className={`h-4 w-4 ${inWishlist ? "fill-error text-error" : ""}`} />
-                  {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                  {inWishlist ? t("game_remove_wishlist") : t("game_add_wishlist")}
                 </button>
                 <button className="flex items-center gap-2 rounded-md bg-accent-primary px-4 py-2 text-sm font-semibold text-white">
-                  <Bell className="h-4 w-4" /> Crea Alert Prezzo
+                  <Bell className="h-4 w-4" /> {t("game_create_alert")}
                 </button>
               </div>
             </div>
@@ -97,13 +114,13 @@ export default function GameDetailPage() {
         <PriceHistoryChart data={game.priceHistory} />
 
         <div className="mt-10">
-          <h2 className="text-lg font-semibold text-text-primary">Screenshots</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{t("game_screenshots")}</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {game.screenshots.map((shot) => (
               <img
                 key={shot}
                 src={shot}
-                alt={`Screenshot ${game.title}`}
+                alt={t("game_screenshot_alt").replace("{title}", game.title)}
                 className="h-44 w-full rounded-md border border-border-color object-cover"
               />
             ))}

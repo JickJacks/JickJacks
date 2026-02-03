@@ -11,7 +11,7 @@ export function useTranslation() {
       console.warn(`Translation key not found: ${key}`);
       return key;
     }
-    return entry[settings.language] ?? entry.it;
+    return entry[settings.language] ?? key;
   };
 
   return { t };

@@ -2,6 +2,7 @@ import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { gamesData } from "../data/gamesData";
 import { useFilters } from "../context/FilterContext";
+import { useTranslation } from "../hooks/useTranslation";
 
 const platforms = [
   "PC",
@@ -32,6 +33,7 @@ type FiltersSidebarProps = {
 
 export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps) {
   const [advancedOpen, setAdvancedOpen] = useState(true);
+  const { t } = useTranslation();
   const {
     selectedPlatforms,
     togglePlatform,
@@ -70,12 +72,12 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
         <div className="flex items-center justify-between lg:hidden">
           <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <SlidersHorizontal className="h-4 w-4 text-accent-primary" />
-            Filtri
+            {t("filters_title")}
           </div>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-md border border-border-color"
-            aria-label="Chiudi filtri"
+            aria-label={t("filters_close")}
           >
             <X className="h-4 w-4 text-text-secondary" />
           </button>
@@ -84,12 +86,12 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
         <div className="mt-4 rounded-lg border border-border-color bg-bg-surface/90 p-6 shadow-md backdrop-blur-xl lg:mt-0">
           <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <SlidersHorizontal className="h-4 w-4 text-accent-primary" />
-            Filtri
+            {t("filters_title")}
           </div>
 
           <div className="mt-6 space-y-6 text-sm text-text-secondary">
             <div>
-              <p className="text-xs font-semibold uppercase text-text-muted">Piattaforme</p>
+              <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_platforms")}</p>
               <div className="mt-3 space-y-2">
                 {platforms.map((platform) => (
                   <label key={platform} className="flex items-center justify-between gap-2">
@@ -109,7 +111,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase text-text-muted">Prezzo</p>
+              <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_price")}</p>
               <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span>€{priceRange.min}</span>
@@ -127,7 +129,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
                     })
                   }
                   className="w-full"
-                  aria-label="Prezzo minimo"
+                  aria-label={t("filters_min_price_label")}
                 />
                 <input
                   type="range"
@@ -141,13 +143,13 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
                     })
                   }
                   className="w-full"
-                  aria-label="Prezzo massimo"
+                  aria-label={t("filters_max_price_label")}
                 />
               </div>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase text-text-muted">Genere</p>
+              <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_genre")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {genres.map((genre) => (
                   <label
@@ -171,7 +173,7 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase text-text-muted">Anno di uscita</p>
+              <p className="text-xs font-semibold uppercase text-text-muted">{t("filters_release_year")}</p>
               <div className="mt-3 flex gap-2">
                 <select
                   className="w-full rounded-md border border-border-color bg-bg-secondary/70 px-3 py-2 text-xs"
@@ -207,22 +209,22 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
                 className="flex w-full items-center justify-between text-xs font-semibold uppercase text-text-muted"
                 onClick={() => setAdvancedOpen((prev) => !prev)}
               >
-                Filtri avanzati
+                {t("filters_advanced")}
                 <ChevronDown className={`h-4 w-4 transition ${advancedOpen ? "rotate-180" : ""}`} />
               </button>
               {advancedOpen ? (
                 <div className="mt-3 space-y-2">
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4" />
-                    Chiavi ufficiali
+                    {t("filters_official_keys")}
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4" />
-                    Solo sconti sopra 50%
+                    {t("filters_discount_50")}
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4" />
-                    Disponibile subito
+                    {t("filters_available_now")}
                   </label>
                 </div>
               ) : null}
@@ -233,10 +235,10 @@ export default function FiltersSidebar({ isOpen, onClose }: FiltersSidebarProps)
                 className="flex-1 rounded-md border border-border-color px-3 py-2 text-xs font-semibold text-text-secondary"
                 onClick={clearFilters}
               >
-                Clear all
+                {t("filters_clear_all")}
               </button>
               <button className="flex-1 rounded-md bg-accent-primary px-3 py-2 text-xs font-semibold text-white">
-                Applica
+                {t("filters_apply")}
               </button>
             </div>
           </div>

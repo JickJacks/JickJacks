@@ -729,7 +729,7 @@ export default function ProfilePage() {
                 </button>
                 <div className="rounded-md border border-border-color bg-bg-primary/60 p-3 text-xs">
                   <p className="font-semibold text-text-primary">{t("settings_active_sessions")}</p>
-                  <p className="mt-2 text-text-secondary">Chrome · Milano · Attiva ora</p>
+                  <p className="mt-2 text-text-secondary">{t("settings_active_session_detail")}</p>
                   <button className="mt-3 rounded-md border border-border-color px-3 py-2 text-xs text-text-secondary">
                     {t("settings_disconnect_sessions")}
                   </button>

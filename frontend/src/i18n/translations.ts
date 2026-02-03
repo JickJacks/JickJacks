@@ -73,6 +73,282 @@ export const translations = {
     fr: "Charger plus de jeux",
   },
 
+  // ─── FILTERS SIDEBAR ───
+  filters_title: {
+    it: "Filtri",
+    en: "Filters",
+    es: "Filtros",
+    fr: "Filtres",
+  },
+  filters_close: {
+    it: "Chiudi filtri",
+    en: "Close filters",
+    es: "Cerrar filtros",
+    fr: "Fermer les filtres",
+  },
+  filters_platforms: {
+    it: "Piattaforme",
+    en: "Platforms",
+    es: "Plataformas",
+    fr: "Plateformes",
+  },
+  filters_price: {
+    it: "Prezzo",
+    en: "Price",
+    es: "Precio",
+    fr: "Prix",
+  },
+  filters_min_price_label: {
+    it: "Prezzo minimo",
+    en: "Minimum price",
+    es: "Precio mínimo",
+    fr: "Prix minimum",
+  },
+  filters_max_price_label: {
+    it: "Prezzo massimo",
+    en: "Maximum price",
+    es: "Precio máximo",
+    fr: "Prix maximum",
+  },
+  filters_genre: {
+    it: "Genere",
+    en: "Genre",
+    es: "Género",
+    fr: "Genre",
+  },
+  filters_release_year: {
+    it: "Anno di uscita",
+    en: "Release year",
+    es: "Año de lanzamiento",
+    fr: "Année de sortie",
+  },
+  filters_advanced: {
+    it: "Filtri avanzati",
+    en: "Advanced filters",
+    es: "Filtros avanzados",
+    fr: "Filtres avancés",
+  },
+  filters_official_keys: {
+    it: "Chiavi ufficiali",
+    en: "Official keys",
+    es: "Claves oficiales",
+    fr: "Clés officielles",
+  },
+  filters_discount_50: {
+    it: "Solo sconti sopra 50%",
+    en: "Only discounts above 50%",
+    es: "Solo descuentos superiores al 50%",
+    fr: "Uniquement des remises supérieures à 50 %",
+  },
+  filters_available_now: {
+    it: "Disponibile subito",
+    en: "Available now",
+    es: "Disponible ahora",
+    fr: "Disponible maintenant",
+  },
+  filters_clear_all: {
+    it: "Azzera",
+    en: "Clear all",
+    es: "Borrar todo",
+    fr: "Tout effacer",
+  },
+  filters_apply: {
+    it: "Applica",
+    en: "Apply",
+    es: "Aplicar",
+    fr: "Appliquer",
+  },
+
+  // ─── WISHLIST PAGE ───
+  wishlist_page_title: {
+    it: "La mia wishlist ({count} giochi)",
+    en: "My wishlist ({count} games)",
+    es: "Mi lista de deseos ({count} juegos)",
+    fr: "Ma liste de souhaits ({count} jeux)",
+  },
+  wishlist_page_empty: {
+    it: "Nessun gioco salvato.",
+    en: "No saved games.",
+    es: "No hay juegos guardados.",
+    fr: "Aucun jeu enregistré.",
+  },
+  wishlist_page_browse: {
+    it: "Sfoglia giochi",
+    en: "Browse games",
+    es: "Explorar juegos",
+    fr: "Parcourir les jeux",
+  },
+  wishlist_page_remove: {
+    it: "Rimuovi dalla wishlist",
+    en: "Remove from wishlist",
+    es: "Eliminar de la lista de deseos",
+    fr: "Supprimer de la liste de souhaits",
+  },
+  wishlist_page_remove_label: {
+    it: "Rimuovi dalla wishlist",
+    en: "Remove from wishlist",
+    es: "Eliminar de la lista de deseos",
+    fr: "Supprimer de la liste de souhaits",
+  },
+
+  // ─── GAME DETAIL ───
+  game_not_found_title: {
+    it: "Gioco non trovato",
+    en: "Game not found",
+    es: "Juego no encontrado",
+    fr: "Jeu introuvable",
+  },
+  game_not_found_desc: {
+    it: "Controlla l'ID o torna alla home.",
+    en: "Check the ID or return home.",
+    es: "Comprueba el ID o vuelve al inicio.",
+    fr: "Vérifiez l'ID ou retournez à l'accueil.",
+  },
+  game_release_date: {
+    it: "Data uscita: {date}",
+    en: "Release date: {date}",
+    es: "Fecha de lanzamiento: {date}",
+    fr: "Date de sortie : {date}",
+  },
+  game_best_price: {
+    it: "Miglior prezzo",
+    en: "Best price",
+    es: "Mejor precio",
+    fr: "Meilleur prix",
+  },
+  game_store_label: {
+    it: "Store: {store}",
+    en: "Store: {store}",
+    es: "Tienda: {store}",
+    fr: "Boutique : {store}",
+  },
+  game_last_update: {
+    it: "Ultimo update {date}",
+    en: "Last update {date}",
+    es: "Última actualización {date}",
+    fr: "Dernière mise à jour {date}",
+  },
+  game_remove_wishlist: {
+    it: "Rimuovi dalla wishlist",
+    en: "Remove from wishlist",
+    es: "Eliminar de la lista de deseos",
+    fr: "Supprimer de la liste de souhaits",
+  },
+  game_add_wishlist: {
+    it: "Aggiungi alla wishlist",
+    en: "Add to wishlist",
+    es: "Agregar a la lista de deseos",
+    fr: "Ajouter à la liste de souhaits",
+  },
+  game_create_alert: {
+    it: "Crea Alert Prezzo",
+    en: "Create price alert",
+    es: "Crear alerta de precio",
+    fr: "Créer une alerte prix",
+  },
+  game_screenshots: {
+    it: "Screenshot",
+    en: "Screenshots",
+    es: "Capturas de pantalla",
+    fr: "Captures d'écran",
+  },
+  game_screenshot_alt: {
+    it: "Screenshot {title}",
+    en: "Screenshot {title}",
+    es: "Captura {title}",
+    fr: "Capture {title}",
+  },
+
+  // ─── PRICE COMPARISON ───
+  price_comparison_title: {
+    it: "Confronto prezzi",
+    en: "Price Comparison",
+    es: "Comparación de precios",
+    fr: "Comparaison des prix",
+  },
+  price_updated: {
+    it: "Aggiornato {date}",
+    en: "Updated {date}",
+    es: "Actualizado {date}",
+    fr: "Mis à jour {date}",
+  },
+  price_view_deal: {
+    it: "Vedi offerta",
+    en: "View deal",
+    es: "Ver oferta",
+    fr: "Voir l'offre",
+  },
+  price_best: {
+    it: "MIGLIOR PREZZO",
+    en: "BEST PRICE",
+    es: "MEJOR PRECIO",
+    fr: "MEILLEUR PRIX",
+  },
+  stock_in: {
+    it: "Disponibile",
+    en: "In stock",
+    es: "En stock",
+    fr: "En stock",
+  },
+  stock_out: {
+    it: "Esaurito",
+    en: "Out of stock",
+    es: "Agotado",
+    fr: "Rupture de stock",
+  },
+  stock_preorder: {
+    it: "Preordine",
+    en: "Pre-order",
+    es: "Reserva",
+    fr: "Précommande",
+  },
+
+  // ─── PRICE HISTORY ───
+  price_history_title: {
+    it: "Storico prezzi",
+    en: "Price history",
+    es: "Historial de precios",
+    fr: "Historique des prix",
+  },
+  price_history_7_days: {
+    it: "7 giorni",
+    en: "7 Days",
+    es: "7 días",
+    fr: "7 jours",
+  },
+  price_history_30_days: {
+    it: "30 giorni",
+    en: "30 Days",
+    es: "30 días",
+    fr: "30 jours",
+  },
+  price_history_90_days: {
+    it: "90 giorni",
+    en: "90 Days",
+    es: "90 días",
+    fr: "90 jours",
+  },
+  price_history_all_time: {
+    it: "Tutto il periodo",
+    en: "All time",
+    es: "Todo el período",
+    fr: "Tout le temps",
+  },
+
+  // ─── NOT FOUND ───
+  not_found_message: {
+    it: "Pagina non trovata.",
+    en: "Page not found.",
+    es: "Página no encontrada.",
+    fr: "Page non trouvée.",
+  },
+  not_found_back_home: {
+    it: "Torna alla home",
+    en: "Back to home",
+    es: "Volver al inicio",
+    fr: "Retour à l'accueil",
+  },
+
   // ─── PROFILE PAGE — HEADER CARD ───
   profile_games_in_wishlist: {
     it: "giochi in wishlist",
@@ -515,6 +791,12 @@ export const translations = {
     en: "Active sessions",
     es: "Sesiones activas",
     fr: "Sessions actives",
+  },
+  settings_active_session_detail: {
+    it: "Chrome · Milano · Attiva ora",
+    en: "Chrome · Milan · Active now",
+    es: "Chrome · Milán · Activa ahora",
+    fr: "Chrome · Milan · Actif maintenant",
   },
   settings_disconnect_sessions: {
     it: "Disconnetti tutte le altre sessioni",

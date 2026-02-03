@@ -1,21 +1,31 @@
 import { ExternalLink, Trophy } from "lucide-react";
 import type { GamePrice } from "../types/game";
+import { useSettings } from "../context/SettingsContext";
+import { useTranslation } from "../hooks/useTranslation";
 
 const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
 
-const stockLabel: Record<GamePrice["stock"], string> = {
-  in_stock: "In Stock",
-  out_of_stock: "Out of Stock",
-  preorder: "Pre-order",
-};
-
 export default function PriceComparisonTable({ prices }: { prices: GamePrice[] }) {
+  const { settings } = useSettings();
+  const { t } = useTranslation();
   const sorted = [...prices].sort((a, b) => a.price - b.price);
   const best = sorted[0];
+  const localeMap: Record<typeof settings.language, string> = {
+    it: "it-IT",
+    en: "en-US",
+    es: "es-ES",
+    fr: "fr-FR",
+  };
+  const locale = localeMap[settings.language] ?? "it-IT";
+  const stockLabel: Record<GamePrice["stock"], string> = {
+    in_stock: t("stock_in"),
+    out_of_stock: t("stock_out"),
+    preorder: t("stock_preorder"),
+  };
 
   return (
     <div className="mt-8 rounded-lg border border-border-color bg-bg-surface/70 p-6">
-      <h2 className="text-lg font-semibold text-text-primary">Price Comparison</h2>
+      <h2 className="text-lg font-semibold text-text-primary">{t("price_comparison_title")}</h2>
       <div className="mt-4 space-y-3">
         {sorted.map((price) => {
           const isBest = price.storeId === best.storeId && price.price === best.price;
@@ -36,7 +46,7 @@ export default function PriceComparisonTable({ prices }: { prices: GamePrice[] }
                     {price.store}
                   </p>
                   <p className="text-xs text-text-muted">
-                    Aggiornato {new Date(price.lastUpdated).toLocaleDateString("it-IT")}
+                    {t("price_updated").replace("{date}", new Date(price.lastUpdated).toLocaleDateString(locale))}
                   </p>
                 </div>
               </div>
@@ -49,12 +59,12 @@ export default function PriceComparisonTable({ prices }: { prices: GamePrice[] }
                   rel="noopener"
                   className="inline-flex items-center gap-1 rounded-md border border-border-color px-3 py-1 text-xs text-text-secondary"
                 >
-                  View Deal <ExternalLink className="h-3 w-3" />
+                  {t("price_view_deal")} <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               {isBest ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-success/20 px-2 py-1 text-xs text-success">
-                  <Trophy className="h-3 w-3" /> BEST PRICE
+                  <Trophy className="h-3 w-3" /> {t("price_best")}
                 </span>
               ) : null}
             </div>
