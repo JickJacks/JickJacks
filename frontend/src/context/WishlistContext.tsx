@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { gamesData } from "../data/gamesData";
 import type { Game } from "../types/game";
-import { useToast } from "./ToastContext";
+import { useToast } from "../components/Toast";
 
 const STORAGE_KEY = "wishlist";
 

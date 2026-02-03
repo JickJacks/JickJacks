@@ -14,7 +14,8 @@ import { Link } from "react-router-dom";
 import { gamesData } from "../data/gamesData";
 import { useWishlist } from "../context/WishlistContext";
 import usePriceAlerts from "../hooks/usePriceAlerts";
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../components/Toast";
+import { type AppSettings, useSettings } from "../context/SettingsContext";
 
 const tabs = ["Price Alerts", "Wishlist", "Settings"] as const;
 
@@ -32,36 +33,18 @@ const initialForm: AlertFormState = {
   stores: [],
 };
 
-type ProfileSettings = {
+type ProfileDetails = {
   avatar: string;
   username: string;
   email: string;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  notificationFrequency: string;
-  minDiscountAlert: number;
-  minPriceAlert: number;
-  preferredPlatforms: string[];
-  preferredStores: string[];
-  theme: "dark" | "light";
-  language: string;
 };
 
-const SETTINGS_KEY = "profileSettings";
+const PROFILE_KEY = "profileSettings";
 
-const defaultSettings: ProfileSettings = {
+const defaultProfileDetails: ProfileDetails = {
   avatar: "",
   username: "GameHunter_IT",
   email: "utente@gamedeals.it",
-  emailNotifications: true,
-  pushNotifications: false,
-  notificationFrequency: "Ogni volta",
-  minDiscountAlert: 50,
-  minPriceAlert: 5,
-  preferredPlatforms: ["PC", "PlayStation 5"],
-  preferredStores: ["Instant Gaming", "Eneba"],
-  theme: "dark",
-  language: "Italiano",
 };
 
 export default function ProfilePage() {
@@ -69,26 +52,35 @@ export default function ProfilePage() {
   const { wishlistIds, getWishlistGames, removeFromWishlist } = useWishlist();
   const { alerts, addAlert, updateAlert, removeAlert } = usePriceAlerts();
   const { showToast } = useToast();
+  const { settings, updateSetting } = useSettings();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [wishlistSort, setWishlistSort] = useState("recent");
   const [form, setForm] = useState<AlertFormState>(initialForm);
   const [gameSearch, setGameSearch] = useState("");
-  const [settings, setSettings] = useState<ProfileSettings>(defaultSettings);
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails>(() => {
+    try {
+      const stored = window.localStorage.getItem(PROFILE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...defaultProfileDetails, ...parsed };
+      }
+    } catch (error) {
+      console.error("Failed to load profile settings", error);
+    }
+    return defaultProfileDetails;
+  });
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(SETTINGS_KEY);
-    if (stored) {
-      setSettings(JSON.parse(stored));
+    try {
+      window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profileDetails));
+    } catch (error) {
+      console.error("Failed to save profile settings", error);
     }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
+  }, [profileDetails]);
 
   const storeOptions = useMemo(() => {
     const set = new Set<string>();
@@ -139,11 +131,27 @@ export default function ProfilePage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setSettings((prev) => ({ ...prev, avatar: String(reader.result) }));
+      setProfileDetails((prev) => ({ ...prev, avatar: String(reader.result) }));
       saveSettings();
     };
     reader.readAsDataURL(file);
   };
+
+  const notificationFrequencyOptions: Array<{
+    value: AppSettings["notificationFrequency"];
+    label: string;
+  }> = [
+    { value: "every_time", label: "Ogni volta" },
+    { value: "once_day", label: "Una volta al giorno" },
+    { value: "once_week", label: "Una volta a settimana" },
+  ];
+
+  const languageOptions: Array<{ value: AppSettings["language"]; label: string }> = [
+    { value: "it", label: "Italiano" },
+    { value: "en", label: "English" },
+    { value: "es", label: "Español" },
+    { value: "fr", label: "Français" },
+  ];
 
   const handleSave = () => {
     if (!form.gameId || !form.targetPrice) {
@@ -206,8 +214,8 @@ export default function ProfilePage() {
         <div className="flex flex-wrap items-center gap-4">
           <UserCircle className="h-16 w-16 text-accent-primary" />
           <div>
-            <h1 className="text-2xl font-semibold">GameHunter_IT</h1>
-            <p className="text-sm text-text-secondary">utente@gamedeals.it</p>
+            <h1 className="text-2xl font-semibold">{profileDetails.username}</h1>
+            <p className="text-sm text-text-secondary">{profileDetails.email}</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-6 text-sm text-text-secondary">
@@ -437,8 +445,12 @@ export default function ProfilePage() {
               <div className="mt-4 flex flex-wrap items-center gap-6">
                 <div className="flex flex-col items-center gap-2">
                   <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border-color">
-                    {settings.avatar ? (
-                      <img src={settings.avatar} alt="Avatar" className="h-full w-full object-cover" />
+                    {profileDetails.avatar ? (
+                      <img
+                        src={profileDetails.avatar}
+                        alt="Avatar"
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <UserCircle className="h-full w-full text-text-muted" />
                     )}
@@ -458,9 +470,9 @@ export default function ProfilePage() {
                     <label className="text-xs font-semibold uppercase text-text-muted">Nome utente</label>
                     <div className="mt-2 flex gap-2">
                       <input
-                        value={settings.username}
+                        value={profileDetails.username}
                         onChange={(event) =>
-                          setSettings((prev) => ({ ...prev, username: event.target.value }))
+                          setProfileDetails((prev) => ({ ...prev, username: event.target.value }))
                         }
                         className="w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
                       />
@@ -475,8 +487,10 @@ export default function ProfilePage() {
                   <div>
                     <label className="text-xs font-semibold uppercase text-text-muted">Email</label>
                     <input
-                      value={settings.email}
-                      onChange={(event) => setSettings((prev) => ({ ...prev, email: event.target.value }))}
+                      value={profileDetails.email}
+                      onChange={(event) =>
+                        setProfileDetails((prev) => ({ ...prev, email: event.target.value }))
+                      }
                       className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
                     />
                   </div>
@@ -499,10 +513,7 @@ export default function ProfilePage() {
                       settings.emailNotifications ? "bg-success" : "bg-border-color"
                     }`}
                     onClick={() => {
-                      setSettings((prev) => ({
-                        ...prev,
-                        emailNotifications: !prev.emailNotifications,
-                      }));
+                      updateSetting("emailNotifications", !settings.emailNotifications);
                       saveSettings();
                     }}
                     aria-label="Toggle email notifications"
@@ -524,10 +535,7 @@ export default function ProfilePage() {
                       settings.pushNotifications ? "bg-success" : "bg-border-color"
                     }`}
                     onClick={() => {
-                      setSettings((prev) => ({
-                        ...prev,
-                        pushNotifications: !prev.pushNotifications,
-                      }));
+                      updateSetting("pushNotifications", !settings.pushNotifications);
                       saveSettings();
                     }}
                     aria-label="Toggle push notifications"
@@ -547,16 +555,16 @@ export default function ProfilePage() {
                     className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
                     value={settings.notificationFrequency}
                     onChange={(event) => {
-                      setSettings((prev) => ({
-                        ...prev,
-                        notificationFrequency: event.target.value,
-                      }));
+                      updateSetting(
+                        "notificationFrequency",
+                        event.target.value as AppSettings["notificationFrequency"]
+                      );
                       saveSettings();
                     }}
                   >
-                    {["Ogni volta", "Una volta al giorno", "Una volta a settimana"].map((option) => (
-                      <option key={option} value={option}>
-                        {option}
+                    {notificationFrequencyOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
@@ -576,17 +584,14 @@ export default function ProfilePage() {
                       type="range"
                       min={5}
                       max={80}
-                      value={settings.minDiscountAlert}
+                      value={settings.minimumDiscount}
                       onChange={(event) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          minDiscountAlert: Number(event.target.value),
-                        }))
+                        updateSetting("minimumDiscount", Number(event.target.value))
                       }
                       className="w-full"
                     />
                     <span className="text-xs font-semibold text-text-primary">
-                      {settings.minDiscountAlert}%
+                      {settings.minimumDiscount}%
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-text-secondary">
@@ -602,12 +607,9 @@ export default function ProfilePage() {
                     <input
                       type="number"
                       min={0}
-                      value={settings.minPriceAlert}
+                      value={settings.minimumAlertPrice}
                       onChange={(event) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          minPriceAlert: Number(event.target.value),
-                        }))
+                        updateSetting("minimumAlertPrice", Number(event.target.value))
                       }
                       className="w-full bg-transparent text-sm text-text-primary focus:outline-none"
                     />
@@ -644,12 +646,12 @@ export default function ProfilePage() {
                       type="checkbox"
                       checked={settings.preferredPlatforms.includes(platform)}
                       onChange={() => {
-                        setSettings((prev) => ({
-                          ...prev,
-                          preferredPlatforms: prev.preferredPlatforms.includes(platform)
-                            ? prev.preferredPlatforms.filter((item) => item !== platform)
-                            : [...prev.preferredPlatforms, platform],
-                        }));
+                        updateSetting(
+                          "preferredPlatforms",
+                          settings.preferredPlatforms.includes(platform)
+                            ? settings.preferredPlatforms.filter((item) => item !== platform)
+                            : [...settings.preferredPlatforms, platform]
+                        );
                         saveSettings();
                       }}
                       className="h-4 w-4"
@@ -680,12 +682,12 @@ export default function ProfilePage() {
                       type="checkbox"
                       checked={settings.preferredStores.includes(store)}
                       onChange={() => {
-                        setSettings((prev) => ({
-                          ...prev,
-                          preferredStores: prev.preferredStores.includes(store)
-                            ? prev.preferredStores.filter((item) => item !== store)
-                            : [...prev.preferredStores, store],
-                        }));
+                        updateSetting(
+                          "preferredStores",
+                          settings.preferredStores.includes(store)
+                            ? settings.preferredStores.filter((item) => item !== store)
+                            : [...settings.preferredStores, store]
+                        );
                         saveSettings();
                       }}
                       className="h-4 w-4"
@@ -705,7 +707,7 @@ export default function ProfilePage() {
                     name="theme"
                     checked={settings.theme === "dark"}
                     onChange={() => {
-                      setSettings((prev) => ({ ...prev, theme: "dark" }));
+                      updateSetting("theme", "dark");
                       saveSettings();
                     }}
                   />
@@ -717,7 +719,7 @@ export default function ProfilePage() {
                     name="theme"
                     checked={settings.theme === "light"}
                     onChange={() => {
-                      setSettings((prev) => ({ ...prev, theme: "light" }));
+                      updateSetting("theme", "light");
                       saveSettings();
                     }}
                   />
@@ -730,13 +732,13 @@ export default function ProfilePage() {
                   className="mt-2 w-full rounded-md border border-border-color bg-bg-primary px-3 py-2 text-sm text-text-primary"
                   value={settings.language}
                   onChange={(event) => {
-                    setSettings((prev) => ({ ...prev, language: event.target.value }));
+                    updateSetting("language", event.target.value as AppSettings["language"]);
                     saveSettings();
                   }}
                 >
-                  {["Italiano", "English", "Español", "Français"].map((language) => (
-                    <option key={language} value={language}>
-                      {language}
+                  {languageOptions.map((language) => (
+                    <option key={language.value} value={language.value}>
+                      {language.label}
                     </option>
                   ))}
                 </select>
