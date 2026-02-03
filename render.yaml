@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: jickjacks-backend
+    env: node
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://jick-jacks.vercel.app
+
+databases:
+  - name: jickjacks-db
+    plan: free
+    region: frankfurt
