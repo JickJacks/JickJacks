@@ -1,7 +1,9 @@
 import "dotenv/config";
+import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 export const app = express();
@@ -29,6 +31,15 @@ const querySchema = z.object({
   limit: z.string().optional(),
 });
 
+const authSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+type AuthenticatedRequest = express.Request & {
+  user?: { id: number; email: string };
+};
+
 const parseNumberParam = (value: string | undefined) => {
   if (value === undefined) return { value: undefined, invalid: false };
   const parsed = Number(value);
@@ -55,8 +66,97 @@ const scoreTitle = (title: string, query: string) => {
   return 0;
 };
 
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is not set");
+  }
+  return secret;
+};
+
+const createToken = (payload: { id: number; email: string }) =>
+  jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+
+const authMiddleware = async (req: AuthenticatedRequest, _res: express.Response, next: express.NextFunction) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    return next();
+  }
+  const token = header.slice("Bearer ".length).trim();
+  try {
+    const decoded = jwt.verify(token, getJwtSecret()) as { id: number; email: string };
+    req.user = { id: decoded.id, email: decoded.email };
+  } catch (error) {
+    console.warn("Invalid auth token.", error);
+  }
+  return next();
+};
+
+const requireAuth = (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: { message: "Unauthorized" } });
+  }
+  return next();
+};
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "gamedeals-italia-api" });
+});
+
+app.use(authMiddleware);
+
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const parsed = authSchema.parse(req.body);
+    const email = parsed.email.toLowerCase();
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ error: { message: "Email already in use." } });
+    }
+    const passwordHash = await bcrypt.hash(parsed.password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+      },
+      select: { id: true, email: true },
+    });
+    const token = createToken(user);
+    return res.status(201).json({ user, token });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: { message: "Invalid registration data." } });
+    }
+    console.error(error);
+    return res.status(500).json({ error: { message: "Internal server error." } });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const parsed = authSchema.parse(req.body);
+    const email = parsed.email.toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ error: { message: "Invalid credentials." } });
+    }
+    const valid = await bcrypt.compare(parsed.password, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: { message: "Invalid credentials." } });
+    }
+    const token = createToken({ id: user.id, email: user.email });
+    return res.json({ user: { id: user.id, email: user.email }, token });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: { message: "Invalid login data." } });
+    }
+    console.error(error);
+    return res.status(500).json({ error: { message: "Internal server error." } });
+  }
+});
+
+app.get("/api/auth/me", requireAuth, (req: AuthenticatedRequest, res) => {
+  return res.json({ user: req.user });
 });
 
 app.get("/api/games", async (req, res) => {
