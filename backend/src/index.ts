@@ -4,8 +4,8 @@ import express from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { z } from "zod";
 
-const app = express();
-const prisma = new PrismaClient();
+export const app = express();
+export const prisma = new PrismaClient();
 
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "*" }));
 app.use(express.json());
@@ -259,6 +259,8 @@ app.get("/api/filters", async (_req, res) => {
 });
 
 const port = Number(process.env.PORT ?? 4000);
-app.listen(port, () => {
-  console.log(`GameDeals Italia API listening on port ${port}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(port, () => {
+    console.log(`GameDeals Italia API listening on port ${port}`);
+  });
+}
